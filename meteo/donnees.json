@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-21T17:15:27Z",
+ "maj": "2026-11-21T17:30:26Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -162,38 +162,6 @@
    "lat": 45.2601,
    "lon": 4.824026,
    "flux": "emballages",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Ilots boules rambertoises",
-   "lat": 45.244384,
-   "lon": 4.843831,
-   "flux": "ordures_menageres",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Ilots boules rambertoises",
-   "lat": 45.244384,
-   "lon": 4.843831,
-   "flux": "emballages",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Ilots boules rambertoises",
-   "lat": 45.244384,
-   "lon": 4.843831,
-   "flux": "verre",
-   "nbUnites": 2
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Ilots boules rambertoises",
-   "lat": 45.244384,
-   "lon": 4.843831,
-   "flux": "papier",
    "nbUnites": 1
   }
  ],
