@@ -362,7 +362,10 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   border: 1px solid color-mix(in srgb, var(--alert) 40%, transparent);
   font-size: .82rem; line-height: 1.35;
 }
-.discord button {
+.aller { display: flex; gap: 8px; margin: 10px 0 2px; flex-wrap: wrap; align-items: center; }
+  .aller button { border: 1px solid currentColor; background: transparent; color: inherit; font: inherit; font-weight: 600; padding: 6px 13px; border-radius: 999px; cursor: pointer; }
+  .aller .adr { flex-basis: 100%; font-size: 12px; opacity: .75; }
+  .discord button {
   border: 1px solid var(--alert); background: transparent; color: var(--alert);
   font: inherit; font-weight: 600; padding: 5px 11px; border-radius: 999px; cursor: pointer;
 }
@@ -497,6 +500,7 @@ fois confirmés sur place par un agent. Masqué quand il n'y en a pas. -->
     <h1 id="site-nm">—</h1>
     <span class="code" id="site-cd"></span>
     <div class="flux" id="site-flux"></div>
+    <div class="aller" id="aller" hidden><button type="button" id="aller-go">Y aller</button><button type="button" id="aller-copier">Copier les coordonnées</button><span class="adr" id="aller-adr"></span></div>
     <span class="gps" id="gps-txt">GPS en cours d'acquisition</span>
     <!-- Visible seulement quand le point affiché contredit le GPS : c'est le
          seul moment où une photo risque d'être rangée au mauvais endroit. -->
@@ -946,6 +950,39 @@ const positionFraiche = () => new Promise((ok, ko) =>
     ko, { enableHighAccuracy:true, maximumAge:0, timeout:10000 }));
 
 /* ── rendu ─────────────────────────────────────────────────────────────── */
+/* Y aller : ouvre l’application de navigation du téléphone vers le point (Android : choix entre Maps, Waze… ;
+   iPhone : Plans ; ordinateur : Google Maps). « Copier les coordonnées » sert à les coller dans n’importe quelle appli. */
+const ADRESSES = {};
+let POINT_ALLER = null;
+function lienNavigation(p) {
+  const ll = p.lat + "," + p.lon, ua = navigator.userAgent || "";
+  if (/iPhone|iPad|iPod/.test(ua)) return "https://maps.apple.com/?daddr=" + ll + "&dirflg=d";
+  if (/Android/.test(ua)) return "geo:0,0?q=" + ll + "(" + encodeURIComponent(p.nom || p.code) + ")";
+  return "https://www.google.com/maps/dir/?api=1&destination=" + ll;
+}
+function majAller(p) {
+  const ok = !!p && isFinite(Number(p.lat)) && isFinite(Number(p.lon)) && Number(p.lat) !== 0;
+  $("aller").hidden = !ok; POINT_ALLER = ok ? p : null;
+  if (!ok) return;
+  $("aller-adr").textContent = ADRESSES[p.code] ? "Près de : " + ADRESSES[p.code] : "";
+  if (!(p.code in ADRESSES)) {
+    ADRESSES[p.code] = "";
+    fetch("https://api-adresse.data.gouv.fr/reverse/?lon=" + p.lon + "&lat=" + p.lat + "&limit=1").then(r => r.json()).then(j => {
+      const a = j.features && j.features[0];
+      if (a) { ADRESSES[p.code] = a.properties.label; if (POINT_ALLER && POINT_ALLER.code === p.code) $("aller-adr").textContent = "Près de : " + a.properties.label; }
+    }).catch(() => {});
+  }
+}
+document.addEventListener("click", (e) => {
+  const go = e.target.closest && e.target.closest("#aller-go"), cp = e.target.closest && e.target.closest("#aller-copier");
+  if ((!go && !cp) || !POINT_ALLER) return;
+  const p = POINT_ALLER;
+  if (go) { const l = lienNavigation(p); if (l.indexOf("geo:") === 0) window.location.href = l; else window.open(l, "_blank", "noopener"); return; }
+  const texte = p.lat + ", " + p.lon;
+  const fini = () => { cp.textContent = "Coordonnées copiées ✓"; setTimeout(() => { cp.textContent = "Copier les coordonnées"; }, 2000); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(fini, () => prompt("Coordonnées du point :", texte));
+  else prompt("Coordonnées du point :", texte);
+});
 function rendre() {
   /* Le relevé n'est pas une liste à finir : un agent passe où il passe. Le
      compteur décrit donc ce qui a été fait, il ne réclame rien. */
@@ -967,9 +1004,10 @@ function rendre() {
     : `${n} point${n > 1 ? "s" : ""} · ${ph} photo${ph > 1 ? "s" : ""}`;
   $("day").textContent = new Date().toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
 
+  if (!courant) majAller(null);
   if (courant) {
     $("site-nm").textContent = courant.nom;
-    $("site-cd").textContent = courant.code;
+    $("site-cd").textContent = courant.code; majAller(courant);
     $("site-flux").innerHTML = Object.entries(courant.postes)
       .map(([f, n]) => `<span class="chip">${nomFlux(f)}${n > 1 ? ` &times;${n}` : ""}</span>`).join("");
     $("shoot-lbl").textContent = "Prendre une photo";
