@@ -424,6 +424,36 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .sheet-a { display: flex; flex-direction: column; gap: 8px; }
 .sheet-a .q-btn { width: 100%; padding: 12px 15px; font-size: .95rem; }
 .sheet-a .q-btn.prim { background: var(--signal); color: var(--signal-ink); border-color: transparent; }
+  /* Points à vérifier : repérés sur une carte (OpenStreetMap, fichier de la collectivité), jamais vus sur place. */
+  .averif {
+  background: color-mix(in srgb, var(--ok) 10%, var(--surface));
+  border: 2px solid var(--ok); border-radius: 14px;
+  padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .av-t { display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+  .av-t svg { width: 22px; height: 22px; flex: none; color: var(--ok); }
+  .av-s { margin: -4px 0 0 31px; font-size: .82rem; color: var(--muted); }
+  .av-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .av-liste > li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .av-liste > li.ouvert { border-color: var(--ok); border-width: 1.5px; }
+  .av-liste > li > button {
+  appearance: none; cursor: pointer; width: 100%; min-height: 48px; border: 0; background: transparent;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left;
+  color: var(--ink); padding: 10px 12px; font-family: var(--font-ui); font-size: .95rem; font-weight: 500;
+  }
+  .av-liste .j { font-family: var(--font-mono); font-size: .82rem; color: var(--ok); flex: none; }
+  .av-f { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .av-d { margin: 0; font-size: .9rem; color: var(--ink); }
+  .av-carte { font-size: .9rem; color: var(--ok); font-weight: 600; }
+  .av-l { font-size: .78rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-top: 4px; }
+  .av-n { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 4px 6px 4px 12px; }
+  .av-n span { flex: 1; font-weight: 500; }
+  .av-n button { appearance: none; cursor: pointer; width: 46px; height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font: 600 1.4rem var(--font-ui); color: var(--ink); }
+  .av-n output { min-width: 2.2ch; text-align: center; font-family: var(--font-mono); font-size: 1.15rem; }
+  .av-ok { appearance: none; cursor: pointer; min-height: 54px; border: 0; border-radius: 12px; background: var(--ok); color: #fff; font: 600 1.05rem var(--font-ui); margin-top: 4px; }
+  .av-ko { appearance: none; cursor: pointer; min-height: 46px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: 500 .95rem var(--font-ui); }
+  .av-ok:disabled, .av-ko:disabled { opacity: .5; }
+  .av-m { margin: 0; font-size: .88rem; color: var(--warn); min-height: 1.2em; }
 </style>
 </head>
 <body>
@@ -452,6 +482,14 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 <div class="retard-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><span id="retard-titre"></span></div>
 <p class="retard-s" id="retard-s"></p>
 <ul class="retard-l" id="retard-l"></ul>
+</div>
+
+<!-- Points pré-remplis depuis une carte : ils n'entrent dans la tournée qu'une
+fois confirmés sur place par un agent. Masqué quand il n'y en a pas. -->
+<div class="averif" id="averif" hidden>
+<div class="av-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><path d="m9 10 2 2 4-4"/></svg><span id="averif-t"></span></div>
+<p class="av-s" id="averif-s"></p>
+<ul class="av-liste" id="averif-l"></ul>
 </div>
 
 <div class="point">
@@ -1736,7 +1774,7 @@ if (!navigator.geolocation) {
   );
 }
 rendre();
-chargerConfig().then(chargerReferentiel);
+chargerConfig().then(chargerReferentiel).then(chargerAVerifier);
 // Les photos du jour sont relues au démarrage : rouvrir la page ne perd rien.
 rechargerVignettes().then(rendre).catch(() => {});
 
@@ -1777,6 +1815,175 @@ if (navigator.share) {
       .catch(() => {});
   });
 }
+
+/* ── Points à vérifier ─────────────────────────────────────────────────────
+Points repérés sur une carte (OpenStreetMap, fichier de la collectivité) et
+créés « à vérifier » depuis la console. Personne ne les a vus : leur position
+et leurs conteneurs sont à confirmer devant les colonnes. Ils restent hors de
+la tournée — et donc de la météo — tant qu'un agent ne les a pas validés.
+La position retenue est celle du téléphone au moment de la validation. */
+let A_VERIFIER = [];
+try { A_VERIFIER = JSON.parse(localStorage.getItem("pav-averifier") || "[]"); } catch {}
+let averifOuvert = null, averifEnvoi = false;
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const urlTerrain = () => (CONF.depot && CONF.depot.terrain)
+  || (ENDPOINT ? ENDPOINT.replace(/pav-photo(\/?)$/, "pav-terrain$1") : null);
+const sauverAVerifier = () => { try { localStorage.setItem("pav-averifier", JSON.stringify(A_VERIFIER)); } catch {} };
+
+function aVerifierDepuis(d) {
+  const par = new Map();
+  for (const r of (d && d.aVerifier) || []) {
+    const code = String(r.site || ""); if (!code) continue;
+    let s = par.get(code);
+    if (!s) { s = { code, nom: String(r.nom || code), lat: Number(r.lat), lon: Number(r.lon), postes: {} }; par.set(code, s); }
+    if (r.flux) s.postes[r.flux] = (s.postes[r.flux] || 0) + Math.max(0, Math.round(Number(r.nbUnites) || 0));
+  }
+  return [...par.values()].filter(s => Number.isFinite(s.lat) && Number.isFinite(s.lon));
+}
+
+async function chargerAVerifier() {
+  const url = CONF.adresses.referentiel; if (!url) return;
+  try {
+    const r = await fetch(url, { headers: { accept: "application/json" }, cache: "no-cache" });
+    if (!r.ok) return;
+    const d = await r.json();
+    if (!d || !Array.isArray(d.referentiel)) return; // réponse douteuse : on garde le cache
+    A_VERIFIER = aVerifierDepuis(d);
+    sauverAVerifier();
+    rendreAVerifier(true);
+  } catch {} // hors ligne : la liste en cache reste affichée
+}
+
+const lireDistance = d => d === null ? "" : d < 1000 ? `${d} m` : `${(d / 1000).toFixed(1).replace(".", ",")} km`;
+function texteDistance(s) {
+  if (!position) return "Position GPS en attente…";
+  const d = Math.round(distance(position, s));
+  return d <= RAYON_M
+    ? `Tu es à ${d} m de l'endroit indiqué par la carte. Vérifie que les conteneurs sont bien là.`
+    : `Tu es à ${lireDistance(d)} de l'endroit indiqué par la carte. Valide seulement une fois devant les conteneurs : la position du point sera la tienne.`;
+}
+
+/* Flux proposés : ceux de la commune (déjà présents dans la tournée) et ceux
+que la carte annonçait pour ce point. */
+function fluxProposes(s) {
+  const f = [];
+  SITES.forEach(x => Object.keys(x.postes).forEach(k => { if (!f.includes(k)) f.push(k); }));
+  Object.keys(s.postes).forEach(k => { if (!f.includes(k)) f.push(k); });
+  return f.length ? f : ["ordures_menageres", "emballages", "verre", "papier"];
+}
+
+function formulaireAVerifier(s) {
+  return `<div class="av-f">`
+    + `<p class="av-d" id="av-dist">${esc(texteDistance(s))}</p>`
+    + `<a class="av-carte" href="https://www.google.com/maps/dir/?api=1&amp;destination=${s.lat},${s.lon}" target="_blank" rel="noopener">Itinéraire vers l'endroit indiqué</a>`
+    + `<span class="av-l">Conteneurs présents — corrige si besoin</span>`
+    + fluxProposes(s).map(f => `<div class="av-n"><span>${esc(nomFlux(f))}</span>`
+      + `<button type="button" data-moins="${esc(f)}" aria-label="Un conteneur ${esc(nomFlux(f))} de moins">−</button>`
+      + `<output data-n="${esc(f)}">${s.postes[f] || 0}</output>`
+      + `<button type="button" data-plus="${esc(f)}" aria-label="Un conteneur ${esc(nomFlux(f))} de plus">+</button></div>`).join("")
+    + `<button type="button" class="av-ok" data-valider="${esc(s.code)}">Valider ce point ici</button>`
+    + `<button type="button" class="av-ko" data-absent="${esc(s.code)}">Ce point n'existe pas</button>`
+    + `<p class="av-m" id="av-m" role="status"></p></div>`;
+}
+
+/* Appelée à chaque rendu (donc à chaque position GPS) : tant qu'un point est
+ouvert, seule la distance change — sinon les compteurs saisis seraient
+remis à zéro à chaque mouvement du téléphone. */
+function rendreAVerifier(force) {
+  const box = $("averif"); if (!box) return;
+  box.hidden = !A_VERIFIER.length;
+  if (!A_VERIFIER.length) return;
+  const ouvert = averifOuvert && A_VERIFIER.find(s => s.code === averifOuvert);
+  if (ouvert && !force) { const p = $("av-dist"); if (p) p.textContent = texteDistance(ouvert); }
+  const liste = A_VERIFIER.map(s => ({ s, d: position ? Math.round(distance(position, s)) : null }))
+    .sort((a, b) => (a.d === null ? 1e9 : a.d) - (b.d === null ? 1e9 : b.d));
+  const ici = liste[0] && liste[0].d !== null && liste[0].d <= RAYON_M ? liste[0].s : null;
+  const n = A_VERIFIER.length;
+  $("averif-t").textContent = ici ? `Point à vérifier ici : ${ici.nom}` : `${n} point${n > 1 ? "s" : ""} à vérifier sur place`;
+  $("averif-s").textContent = ici
+    ? "Repéré sur une carte, jamais vu sur place : confirme-le et compte ses conteneurs."
+    : "Repérés sur une carte, jamais vus sur place. En passant devant, appuie dessus pour les confirmer.";
+  if (ouvert && !force) return;
+  $("averif-l").innerHTML = liste.map(x => {
+      const o = averifOuvert === x.s.code;
+      return `<li${o ? ' class="ouvert"' : ""}><button type="button" data-av="${esc(x.s.code)}" aria-expanded="${o}">`
+        + `<span>${esc(x.s.nom)}</span><span class="j">${lireDistance(x.d)} ${o ? "&times;" : "&rsaquo;"}</span></button>`
+        + (o ? formulaireAVerifier(x.s) : "") + `</li>`;
+  }).join("");
+}
+
+async function envoyerTerrain(code, action) {
+  const s = A_VERIFIER.find(x => x.code === code); if (!s || averifEnvoi) return;
+  const m = $("av-m"), url = urlTerrain();
+  const dire = t => { if (m) m.textContent = t; };
+  if (!url) { dire("Aucun serveur configuré : impossible de valider depuis ce téléphone."); return; }
+  if (!CODE) { ouvrirCode("Saisis ton code d'accès pour valider un point."); return; }
+  if (!navigator.onLine) { dire("Pas de réseau : réessaie quand le téléphone capte."); return; }
+  const fd = new FormData();
+  fd.append("code", CODE);
+  fd.append("commune", (CONF.commune && CONF.commune.nom) || "");
+  fd.append("site_code", code);
+  fd.append("action", action);
+  if (action === "valider") {
+    const u = {};
+    document.querySelectorAll("#averif-l output[data-n]").forEach(o => { const v = Number(o.textContent); if (v > 0) u[o.dataset.n] = v; });
+    if (!Object.keys(u).length) { dire("Indique au moins un conteneur, ou choisis « Ce point n'existe pas »."); return; }
+    dire("Lecture de la position GPS…");
+    let pos = null;
+    try { pos = await positionFraiche(); } catch { pos = position; }
+    if (!pos) { dire("Position GPS indisponible : réessaie dans un instant."); return; }
+    if (pos.precision_m > 50) { dire(`Signal GPS trop imprécis (±${pos.precision_m} m) : mets-toi à découvert et réessaie.`); return; }
+    const d = Math.round(distance(pos, s));
+    if (d > 300 && !confirm(`Tu es à ${lireDistance(d)} de l'endroit indiqué par la carte.\n\nLes conteneurs sont-ils bien ici, devant toi ? La position du point sera remplacée par la tienne.`)) { dire(""); return; }
+    fd.append("lat", pos.lat); fd.append("lon", pos.lon); fd.append("precision_m", pos.precision_m);
+    fd.append("unites", JSON.stringify(u));
+  } else if (!confirm(`« ${s.nom} » n'existe pas ici ?\n\nLe point sera retiré des points à vérifier. L'administrateur pourra toujours le rétablir.`)) return;
+
+  averifEnvoi = true;
+  document.querySelectorAll("#averif-l .av-ok, #averif-l .av-ko").forEach(b => { b.disabled = true; });
+  dire("Envoi…");
+  try {
+    const r = await fetch(url, { method: "POST", body: fd });
+    if (r.status === 401 || r.status === 403) { dire("Code d'accès refusé."); ouvrirCode("Ce code a été refusé par le serveur."); return; }
+    let j = null; try { j = await r.json(); } catch {}
+    if (!r.ok || !j || !j.ok) { dire((j && j.motif) || `Le serveur a répondu ${r.status} : réessaie plus tard.`); return; }
+    A_VERIFIER = A_VERIFIER.filter(x => x.code !== code); sauverAVerifier();
+    averifOuvert = null;
+    $("flash-t").textContent = action === "valider" ? "Point validé" : "Point retiré";
+    $("flash-s").textContent = action === "valider"
+      ? `${s.nom} rejoindra la tournée à la prochaine mise à jour, d'ici un quart d'heure environ.`
+      : `${s.nom} est noté comme inexistant.`;
+    $("flash").hidden = false;
+    rendreAVerifier(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch { dire("Réseau indisponible : réessaie dans un instant."); }
+  finally {
+    averifEnvoi = false;
+    document.querySelectorAll("#averif-l .av-ok, #averif-l .av-ko").forEach(b => { b.disabled = false; });
+  }
+}
+
+$("averif-l").addEventListener("click", e => {
+    const t = e.target;
+    const plus = t.closest("[data-plus]"), moins = t.closest("[data-moins]");
+    if (plus || moins) {
+      const f = (plus || moins).dataset[plus ? "plus" : "moins"];
+      const o = $("averif-l").querySelector(`output[data-n="${CSS.escape(f)}"]`);
+      if (o) o.textContent = String(Math.max(0, Math.min(20, Number(o.textContent) + (plus ? 1 : -1))));
+      return;
+    }
+    const v = t.closest("[data-valider]"); if (v) { envoyerTerrain(v.dataset.valider, "valider"); return; }
+    const a = t.closest("[data-absent]"); if (a) { envoyerTerrain(a.dataset.absent, "absent"); return; }
+    const b = t.closest("button[data-av]"); if (!b) return;
+    averifOuvert = averifOuvert === b.dataset.av ? null : b.dataset.av;
+    rendreAVerifier(true);
+});
+
+/* Le bandeau suit le GPS sans toucher au rendu principal : on se greffe à la
+suite de rendre(), appelée à chaque nouvelle position. */
+const rendreTournee = rendre;
+rendre = function () { rendreTournee.apply(this, arguments); rendreAVerifier(false); };
+rendreAVerifier(true);
 </script>
 
 <script type="module">
