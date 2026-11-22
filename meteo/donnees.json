@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-22T16:00:27Z",
+ "maj": "2026-11-22T18:00:27Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -165,7 +165,40 @@
    "nbUnites": 1
   }
  ],
- "aVerifier": [],
+ "aVerifier": [
+  {
+   "site": "ALB-07",
+   "nom": "Îlot OSM 2",
+   "lat": 45.248859,
+   "lon": 4.867619,
+   "flux": "ordures_menageres",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-07",
+   "nom": "Îlot OSM 2",
+   "lat": 45.248859,
+   "lon": 4.867619,
+   "flux": "emballages",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-07",
+   "nom": "Îlot OSM 2",
+   "lat": 45.248859,
+   "lon": 4.867619,
+   "flux": "verre",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-07",
+   "nom": "Îlot OSM 2",
+   "lat": 45.248859,
+   "lon": 4.867619,
+   "flux": "papier",
+   "nbUnites": 1
+  }
+ ],
  "observations": [
   {
    "uuid": "5e0d5759-6350-4728-a75a-8c3a31ab727b",
