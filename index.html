@@ -427,6 +427,9 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .sheet-a { display: flex; flex-direction: column; gap: 8px; }
 .sheet-a .q-btn { width: 100%; padding: 12px 15px; font-size: .95rem; }
 .sheet-a .q-btn.prim { background: var(--signal); color: var(--signal-ink); border-color: transparent; }
+  .av-nom { width: 100%; box-sizing: border-box; font: inherit; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; margin: 2px 0 10px; background: var(--surface); color: inherit; }
+  .av-pos { display: flex; gap: 8px; align-items: center; margin: 4px 0; font-size: 14px; }
+  .av-pos input { width: 18px; height: 18px; }
   /* Points à vérifier : repérés sur une carte (OpenStreetMap, fichier de la collectivité), jamais vus sur place. */
   .averif {
   background: color-mix(in srgb, var(--ok) 10%, var(--surface));
@@ -1914,7 +1917,7 @@ function formulaireAVerifier(s) {
   return `<div class="av-f">`
     + `<p class="av-d" id="av-dist">${esc(texteDistance(s))}</p>`
     + `<a class="av-carte" href="https://www.google.com/maps/dir/?api=1&amp;destination=${s.lat},${s.lon}" target="_blank" rel="noopener">Itinéraire vers l'endroit indiqué</a>`
-    + `<span class="av-l">Conteneurs présents — corrige si besoin</span>`
+    + `<label class="av-l" for="av-nom">Nom du point — corrige si besoin (rue, place, quartier…)</label><input class="av-nom" id="av-nom" type="text" maxlength="60" autocomplete="off" value="${esc(s.nom)}"><span class="av-l">Position à enregistrer</span><label class="av-pos"><input type="radio" name="av-pos" value="gps" checked> Ma position actuelle — je suis devant les conteneurs</label><label class="av-pos"><input type="radio" name="av-pos" value="carte"> Garder la position de la carte</label><span class="av-l">Conteneurs présents — corrige si besoin</span>`
     + fluxProposes(s).map(f => `<div class="av-n"><span>${esc(nomFlux(f))}</span>`
       + `<button type="button" data-moins="${esc(f)}" aria-label="Un conteneur ${esc(nomFlux(f))} de moins">−</button>`
       + `<output data-n="${esc(f)}">${s.postes[f] || 0}</output>`
@@ -1966,7 +1969,12 @@ async function envoyerTerrain(code, action) {
     const u = {};
     document.querySelectorAll("#averif-l output[data-n]").forEach(o => { const v = Number(o.textContent); if (v > 0) u[o.dataset.n] = v; });
     if (!Object.keys(u).length) { dire("Indique au moins un conteneur, ou choisis « Ce point n'existe pas »."); return; }
-    dire("Lecture de la position GPS…");
+    const nomSaisi = (($("av-nom") || {}).value || "").trim();
+      if (!nomSaisi) { dire("Indique un nom pour ce point."); return; }
+      fd.append("nom", nomSaisi);
+      const garderCarte = !!document.querySelector('#averif-l input[name="av-pos"][value="carte"]:checked');
+      if (garderCarte) { fd.append("position", "carte"); fd.append("unites", JSON.stringify(u)); } else {
+      dire("Lecture de la position GPS…");
     let pos = null;
     try { pos = await positionFraiche(); } catch { pos = position; }
     if (!pos) { dire("Position GPS indisponible : réessaie dans un instant."); return; }
@@ -1974,7 +1982,7 @@ async function envoyerTerrain(code, action) {
     const d = Math.round(distance(pos, s));
     if (d > 300 && !confirm(`Tu es à ${lireDistance(d)} de l'endroit indiqué par la carte.\n\nLes conteneurs sont-ils bien ici, devant toi ? La position du point sera remplacée par la tienne.`)) { dire(""); return; }
     fd.append("lat", pos.lat); fd.append("lon", pos.lon); fd.append("precision_m", pos.precision_m);
-    fd.append("unites", JSON.stringify(u));
+    fd.append("unites", JSON.stringify(u)); }
   } else if (!confirm(`« ${s.nom} » n'existe pas ici ?\n\nLe point sera retiré des points à vérifier. L'administrateur pourra toujours le rétablir.`)) return;
 
   averifEnvoi = true;
