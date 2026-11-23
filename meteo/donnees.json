@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-23T10:45:59Z",
+ "maj": "2026-11-23T18:45:59Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -2863,6 +2863,63 @@
    "confiance": 0.85,
    "texte": "Une colonne à verre verte avec deux ouvertures rondes, rien posé dessus ; au pied, un carton affaissé (flux étranger au verre). Une seconde colonne verte est coupée en bord de cadre et non comptée.",
    "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "2d9e891a-7f97-403d-8f82-5125cc10fa0e",
+   "ts": "2026-11-23T10:56:35.665Z",
+   "site": "ALB-01",
+   "flux": "papier",
+   "photo": "1bUfjXgLH-3cttik5klC28Y8KUptkbQlB",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.8,
+   "texte": "Une colonne bleue papier/cartonnette vue de face en gros plan : des cartons et boîtes apparaissent dans les ouvertures, mais rien n'est posé dessus et le pied de la colonne est vide ; le sol n'est pas entièrement visible.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "1405efcf-7575-4a3d-b9d4-fd6278e8f538",
+   "ts": "2026-11-23T10:57:01.846Z",
+   "site": "ALB-01",
+   "flux": "ordures_menageres",
+   "photo": "",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.88,
+   "texte": "Une colonne semi-enterrée à tambour, étiquette « Ordures ménagères », rien posé sur le couvercle ni le tambour, seules des feuilles mortes au sol ; une seconde colonne est à peine visible à l'arrière, sans ouverture lisible, donc non comptée.",
+   "personneVisible": true,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "510da783-fbd9-44cb-b52a-e9aad23e6a00",
+   "ts": "2026-11-23T10:57:35.115Z",
+   "site": "ALB-01",
+   "flux": "ordures_menageres",
+   "photo": "",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.9,
+   "texte": "Une colonne semi-enterrée d'ordures ménagères (étiquette « Ordures ménagères ») avec tambour d'introduction visible, rien posé dessus ni au sol ; une seconde colonne n'apparaît qu'en bord de cadre, sans ouverture visible, donc non comptée.",
+   "personneVisible": true,
    "plaqueLisible": false
   }
  ]
