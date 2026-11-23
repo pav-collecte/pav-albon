@@ -461,7 +461,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .av-ok:disabled, .av-ko:disabled { opacity: .5; }
   .av-m { margin: 0; font-size: .88rem; color: var(--warn); min-height: 1.2em; }
 /* ── signal « plein » : bandeau après la photo, puces dans la loupe ──────── */
-.plein-b { position: relative; overflow: hidden; background: var(--surface); border: 2px solid var(--ok); border-radius: 14px; padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 9px; }
+.plein-b { position: fixed; z-index: 40; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); max-width: 32rem; margin: 0 auto; box-shadow: 0 6px 24px rgba(0,0,0,.28); overflow: hidden; background: var(--surface); border: 2px solid var(--ok); border-radius: 14px; padding: 12px 12px 14px; display: flex; flex-direction: column; gap: 9px; }
 .pl-t { font-weight: 600; font-size: .98rem; }
 .pl-l { display: flex; flex-wrap: wrap; gap: 8px; }
 .pl-c { appearance: none; cursor: pointer; min-height: 46px; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: 600 1rem var(--font-ui); }
@@ -533,7 +533,7 @@ fois confirmés sur place par un agent. Masqué quand il n'y en a pas. -->
     <span id="shoot-lbl">Photographier</span>
   </button>
   <p class="hint" id="hint">Photographie chaque point, même quand tout va bien.</p>
-  <!-- Signal « plein » : apparaît 6 s après chaque photo, sans appui rien n'est signalé. -->
+  <!-- Signal « plein » : bandeau fixé en bas de l'écran, 8 s après chaque photo, sans appui rien n'est signalé. -->
   <div class="plein-b" id="plein-b" role="status" hidden></div>
   <button type="button" class="shoot second" id="galerie">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
@@ -917,12 +917,13 @@ function dessinerBandeau() {
   $("plein-b").innerHTML = `<span class="pl-t">Photo enregistrée — ${multi ? "un conteneur plein ?" : "conteneur plein ?"}</span>`
     + `<div class="pl-l">${puces(PB_U, PB_S)}</div><i class="pl-j"><b></b></i>`;
 }
-/* Sans appui, le bandeau s'efface après 6 s ; chaque appui laisse 4 s de plus
+/* Fixé en bas de l'écran : la page remonte en haut après chaque photo, un
+bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; chaque appui laisse 4 s de plus
 pour en signaler un deuxième. */
 function proposerPlein(uuid, site) {
   if (!site || !Object.keys(site.postes || {}).length) return;
   PB_U = uuid; PB_S = site;
-  dessinerBandeau(); $("plein-b").hidden = false; relancerBandeau(6000);
+  dessinerBandeau(); $("plein-b").hidden = false; relancerBandeau(8000);
 }
 function dessinerLoupePlein(uuid) {
   const v = vignettes.find(x => x.uuid === uuid);
