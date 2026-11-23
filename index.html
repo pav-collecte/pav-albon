@@ -467,6 +467,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .pl-c { appearance: none; cursor: pointer; min-height: 46px; padding: 8px 16px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); font: 600 1rem var(--font-ui); }
 .pl-c.on { background: color-mix(in srgb, var(--warn) 20%, var(--surface)); border-color: var(--warn); }
 .pl-c.on::before { content: "✓ "; }
+.pl-ok { appearance: none; cursor: pointer; margin-left: auto; min-height: 46px; padding: 8px 20px; border: 0; border-radius: 999px; background: var(--ok); color: #fff; font: 600 1rem var(--font-ui); }
 .pl-s { color: var(--alert); border-color: color-mix(in srgb, var(--alert) 55%, transparent); }
 .pl-c.pl-s.on { background: color-mix(in srgb, var(--alert) 18%, var(--surface)); border-color: var(--alert); color: var(--ink); }
 .loupe-p .pl-s { color: #fff; }
@@ -925,11 +926,11 @@ function relancerBandeau(ms) {
 function dessinerBandeau() {
   const multi = Object.keys(PB_S.postes || {}).length > 1;
   $("plein-b").innerHTML = `<span class="pl-t">Photo enregistrée — ${multi ? "un conteneur plein, ou sale ?" : "plein ou sale ?"}</span>`
-    + `<div class="pl-l">${puces(PB_U, PB_S)}</div><i class="pl-j"><b></b></i>`;
+    + `<div class="pl-l">${puces(PB_U, PB_S)}${pleinsDe(PB_U).length ? '<button type="button" class="pl-ok">OK</button>' : ""}</div><i class="pl-j"><b></b></i>`;
 }
 /* Fixé en bas de l'écran : la page remonte en haut après chaque photo, un
-bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; un appui enregistre
-le signal et ferme le bandeau ; un deuxième flux plein se signale dans la loupe. */
+bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; un premier appui laisse
+4 s pour cocher l'autre signal (plein et sale), OK ferme aussitôt. */
 function proposerPlein(uuid, site) {
   if (!site || !Object.keys(site.postes || {}).length) return;
   PB_U = uuid; PB_S = site;
@@ -949,10 +950,16 @@ const badgePlein = u => {
 };
 document.addEventListener("click", async e => {
   const t = e.target; if (!t.closest) return;
+  if (t.closest("#plein-b .pl-ok")) { fermerBandeau(); return; }
   const c = t.closest("#plein-b .pl-c");
   if (c && PB_U) {
     const u = PB_U; await basculerPlein(u, c.dataset.pf);
-    if (PB_U === u) { dessinerBandeau(); relancerBandeau(700); } // la coche s'affiche, puis le bandeau se ferme
+    if (PB_U === u) {
+      /* Plein ET sale cochés : tout est dit, on ferme. Sinon 4 s pour l'autre
+         signal, ou OK pour fermer tout de suite. */
+      const l = pleinsDe(u), deux = l.includes("_sale") && l.some(x => x !== "_sale");
+      dessinerBandeau(); relancerBandeau(deux ? 700 : 4000);
+    }
     rendre(); return;
   }
   const lc = t.closest("#loupe-p .pl-c");
