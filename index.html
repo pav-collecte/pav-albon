@@ -918,8 +918,8 @@ function dessinerBandeau() {
     + `<div class="pl-l">${puces(PB_U, PB_S)}</div><i class="pl-j"><b></b></i>`;
 }
 /* Fixé en bas de l'écran : la page remonte en haut après chaque photo, un
-bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; chaque appui laisse 4 s de plus
-pour en signaler un deuxième. */
+bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; un appui enregistre
+le signal et ferme le bandeau ; un deuxième flux plein se signale dans la loupe. */
 function proposerPlein(uuid, site) {
   if (!site || !Object.keys(site.postes || {}).length) return;
   PB_U = uuid; PB_S = site;
@@ -937,7 +937,7 @@ document.addEventListener("click", async e => {
   const c = t.closest("#plein-b .pl-c");
   if (c && PB_U) {
     const u = PB_U; await basculerPlein(u, c.dataset.pf);
-    if (PB_U === u) { dessinerBandeau(); relancerBandeau(4000); }
+    if (PB_U === u) { dessinerBandeau(); relancerBandeau(700); } // la coche s'affiche, puis le bandeau se ferme
     rendre(); return;
   }
   const lc = t.closest("#loupe-p .pl-c");
