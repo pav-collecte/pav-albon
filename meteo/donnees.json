@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-23T08:00:59Z",
+ "maj": "2026-11-23T10:45:59Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -165,40 +165,7 @@
    "nbUnites": 1
   }
  ],
- "aVerifier": [
-  {
-   "site": "ALB-07",
-   "nom": "Îlot OSM 2",
-   "lat": 45.248859,
-   "lon": 4.867619,
-   "flux": "ordures_menageres",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Îlot OSM 2",
-   "lat": 45.248859,
-   "lon": 4.867619,
-   "flux": "emballages",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Îlot OSM 2",
-   "lat": 45.248859,
-   "lon": 4.867619,
-   "flux": "verre",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-07",
-   "nom": "Îlot OSM 2",
-   "lat": 45.248859,
-   "lon": 4.867619,
-   "flux": "papier",
-   "nbUnites": 1
-  }
- ],
+ "aVerifier": [],
  "observations": [
   {
    "uuid": "5e0d5759-6350-4728-a75a-8c3a31ab727b",
@@ -2211,6 +2178,101 @@
    "cause": "indetermine",
    "confiance": 0.85,
    "texte": "Deux colonnes semi-enterrées à dôme gris et socle en béton, étiquettes ordures ménagères; aucun déchet sur les couvercles, un sac noir et quelques déchets épars au sol entre les deux colonnes.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "08835167-0c09-4e2d-b0c9-c9e11c8a70fd",
+   "ts": "2026-11-19T13:08:17.604Z",
+   "site": "ALB-03",
+   "flux": "ordures_menageres",
+   "photo": "1WawVW1EERutSdp7Zq60QSC7NdxLIUpis",
+   "inaccessible": false,
+   "vues": 2,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": true,
+   "sacs": 2,
+   "cause": "indetermine",
+   "confiance": 0.7,
+   "texte": "Deux colonnes semi-enterrées à dôme gris avec trappe, sans déchet posé dessus ; un sac noir et quelques déchets diffus au sol entre les deux colonnes.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "08835167-0c09-4e2d-b0c9-c9e11c8a70fd",
+   "ts": "2026-11-19T13:08:17.604Z",
+   "site": "ALB-03",
+   "flux": "carton",
+   "photo": "1WawVW1EERutSdp7Zq60QSC7NdxLIUpis",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.3,
+   "texte": "Benne verte ouverte sur roulettes à droite du cadre, flux incertain et non listé parmi les contenants attendus ; rien dessus ni à son pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "820bf35d-f586-40b7-8bbd-ba4459690ce7",
+   "ts": "2026-11-19T13:08:58.354Z",
+   "site": "ALB-03",
+   "flux": "verre",
+   "photo": "1ay0cqfVbWQ3V1qhpD9M6pleSp22YXd0h",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.8,
+   "texte": "Colonne noire à deux ouvertures rondes cerclées de vert au premier plan, rien posé dessus ni au sol à son pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "820bf35d-f586-40b7-8bbd-ba4459690ce7",
+   "ts": "2026-11-19T13:08:58.354Z",
+   "site": "ALB-03",
+   "flux": "emballages",
+   "photo": "1ay0cqfVbWQ3V1qhpD9M6pleSp22YXd0h",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.7,
+   "texte": "Colonne verte à gauche avec autocollant jaune et ouverture ronde visible, aucun déchet dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "820bf35d-f586-40b7-8bbd-ba4459690ce7",
+   "ts": "2026-11-19T13:08:58.354Z",
+   "site": "ALB-03",
+   "flux": "papier",
+   "photo": "1ay0cqfVbWQ3V1qhpD9M6pleSp22YXd0h",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.5,
+   "texte": "Colonne verte centrale avec autocollant bleu et ouverture rectangulaire, flux non attendu sur ce site ; rien dessus ni au sol.",
    "personneVisible": false,
    "plaqueLisible": false
   },
