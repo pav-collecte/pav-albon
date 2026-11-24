@@ -34,7 +34,6 @@
   ],
   "proprete": {
     "libelle": "Propreté au sol",
-    "_": "max = nombre de sacs au sol constatés sur la photo.",
     "paliers": [
       {
         "max": 0,
@@ -53,13 +52,11 @@
         "points": 6
       }
     ],
-    "_depotSansSac": "Dépôt constaté mais aucun sac dénombrable (carton, encombrant).",
     "depotSansSac": 2
   },
   "remplissage": {
     "libelle": "Remplissage",
-    "_": "max = part des conteneurs pleins ou bloqués, de 0 à 1.",
-    "inaccessible": 4,
+    "inaccessible": 3,
     "paliers": [
       {
         "max": 0,
@@ -81,8 +78,7 @@
   },
   "recidive": {
     "libelle": "Récidive",
-    "_": "max = nombre de passages avec dépôt au sol dans la fenêtre, celui du relevé compris.",
-    "fenetreJours": 30,
+    "fenetreJours": 60,
     "paliers": [
       {
         "max": 0,
@@ -93,7 +89,7 @@
         "points": 1
       },
       {
-        "max": 3,
+        "max": 2,
         "points": 2
       },
       {
@@ -103,13 +99,13 @@
     ]
   },
   "passage": {
-    "minutes": 20
+    "minutes": 30
   },
   "agregation": {
     "ilot": "max",
     "commune": "moyenne"
   },
-  "version": 10,
+  "version": 11,
   "versions": [
     {
       "lettres": [
