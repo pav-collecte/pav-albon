@@ -238,7 +238,10 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .al-box{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .al{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;border:1px solid;font-size:.88rem;line-height:1.45}
 .al.rouge{background:#FDECEA;border-color:#F2B8B5;color:#7A1C14}
-.al-l{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.al-l{color:inherit;font-weight:600;text-decoration:none}
+.al-l::after{content:" ›";font-weight:700}
+.al{cursor:pointer}
+.al:hover{filter:brightness(.97)}
 @keyframes alFlash{0%,60%{box-shadow:0 0 0 4px #E08A00}100%{box-shadow:none}}
 article.site.al-flash{animation:alFlash 2.2s ease-out}
 .al.orange{background:#FFF4E5;border-color:#F5CF99;color:#6B4200}
@@ -318,14 +321,6 @@ details[open] summary{margin-bottom:8px}
   </script>
 </section>
 
-<section>
-  <div class="sechead">
-    <h2>État des îlots</h2>
-    <p>Cliquez le détail d'un îlot pour voir le raisonnement flux par flux.</p>
-  </div>
-  <div class="grid" id="sites"></div>
-</section>
-
 <section id="photos-jour" hidden>
 <div class="sechead">
 <h2 id="pj-titre">Photos du jour</h2>
@@ -337,6 +332,16 @@ details[open] summary{margin-bottom:8px}
 </div>
 <div class="pj-liste" id="pj-liste"></div>
 </section>
+
+<section>
+  <div class="sechead">
+    <h2>État des îlots</h2>
+    <p>Cliquez le détail d'un îlot pour voir le raisonnement flux par flux.</p>
+  </div>
+  <div class="grid" id="sites"></div>
+</section>
+
+
 
 <section>
   <div class="sechead">
@@ -502,7 +507,7 @@ function rendu(){
       +retard.map(s=>'<a href="#" class="al-l" data-al="'+esc(s.site)+'">'+esc(s.site+' — '+s.nom)+'</a>'+' : '+(s.dernier?'dernier il y a '+jours(s.dernier)+' jours':'jamais relevé')).join(' · ')+'</div></div>';
     box.innerHTML=h; box.hidden=!h;
     /* Avis AV-MWW2Z3BS-4 : un clic sur un îlot d'alerte amène à sa carte. */
-    box.onclick=e=>{ const l=e.target.closest('[data-al]'); if(!l) return; e.preventDefault();
+    box.onclick=e=>{ const al=e.target.closest('.al'); const l=e.target.closest('[data-al]')||(al&&al.querySelector('[data-al]')); if(!l) return; e.preventDefault();
       const art=[...document.querySelectorAll('article.site')].find(x=>((x.querySelector('.site-code')||{}).textContent||'').includes(l.dataset.al));
       if(!art) return; art.scrollIntoView({behavior:'smooth',block:'start'}); art.classList.remove('al-flash'); void art.offsetWidth; art.classList.add('al-flash'); };
   })();
