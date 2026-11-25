@@ -208,6 +208,9 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .al-box{display:flex;flex-direction:column;gap:8px;margin-top:10px}
 .al{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:10px;border:1px solid;font-size:.88rem;line-height:1.45}
 .al.rouge{background:#FDECEA;border-color:#F2B8B5;color:#7A1C14}
+.al-l{color:inherit;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+@keyframes alFlash{0%,60%{box-shadow:0 0 0 4px #E08A00}100%{box-shadow:none}}
+article.site.al-flash{animation:alFlash 2.2s ease-out}
 .al.orange{background:#FFF4E5;border-color:#F5CF99;color:#6B4200}
 .bars{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:12px}
 /* Statistiques détaillées (graphes) */
@@ -452,10 +455,14 @@ function rendu(){
     const retard=sites.filter(s=>!s.dernier||jours(s.dernier)>JOURS_ALERTE).sort((a,b)=>(a.dernier||'').localeCompare(b.dernier||''));
     let h='';
     if(noirs.length) h+='<div class="al rouge" role="alert">'+tri('#B3261E')+'<div><b>'+noirs.length+' point'+(noirs.length>1?'s':'')+' noir'+(noirs.length>1?'s':'')+' (Bac-Score D ou E)</b><br>'
-      +noirs.map(s=>esc(s.site+' — '+s.nom)+' : <b>'+s.L.l+'</b> '+esc(s.L.lab.toLowerCase())).join(' · ')+'</div></div>';
+      +noirs.map(s=>'<a href="#" class="al-l" data-al="'+esc(s.site)+'">'+esc(s.site+' — '+s.nom)+'</a>'+' : <b>'+s.L.l+'</b> '+esc(s.L.lab.toLowerCase())).join(' · ')+'</div></div>';
     if(retard.length) h+='<div class="al orange" role="alert">'+tri('#E08A00')+'<div><b>Relevés en retard : '+retard.length+' îlot'+(retard.length>1?'s':'')+' sans photo depuis plus de '+JOURS_ALERTE+' jours</b><br>'
-      +retard.map(s=>esc(s.site+' — '+s.nom)+' : '+(s.dernier?'dernier il y a '+jours(s.dernier)+' jours':'jamais relevé')).join(' · ')+'</div></div>';
+      +retard.map(s=>'<a href="#" class="al-l" data-al="'+esc(s.site)+'">'+esc(s.site+' — '+s.nom)+'</a>'+' : '+(s.dernier?'dernier il y a '+jours(s.dernier)+' jours':'jamais relevé')).join(' · ')+'</div></div>';
     box.innerHTML=h; box.hidden=!h;
+    /* Avis AV-MWW2Z3BS-4 : un clic sur un îlot d'alerte amène à sa carte. */
+    box.onclick=e=>{ const l=e.target.closest('[data-al]'); if(!l) return; e.preventDefault();
+      const art=[...document.querySelectorAll('article.site')].find(x=>((x.querySelector('.site-code')||{}).textContent||'').includes(l.dataset.al));
+      if(!art) return; art.scrollIntoView({behavior:'smooth',block:'start'}); art.classList.remove('al-flash'); void art.offsetWidth; art.classList.add('al-flash'); };
   })();
   /* La frise et la décomposition suivent le même ordre : trois sections qui
      classent différemment les mêmes îlots se lisent mal. */
