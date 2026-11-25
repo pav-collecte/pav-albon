@@ -206,6 +206,24 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .tile.alert .v,.tile.alert .k,.tile.alert .n{color:var(--crit)}
 
 .bars{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:12px}
+/* Statistiques détaillées (graphes) */
+.st-choix{display:flex;gap:8px;align-items:center;margin:0 0 12px;font-size:.86rem;color:var(--ink-2)}
+.st-choix select{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);max-width:100%}
+.st-carte{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:12px;min-width:0}
+.st-ligne{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.st-t{font-size:.86rem;font-weight:600;color:var(--ink);margin-bottom:10px}
+.st-svg{width:100%;height:auto;display:block}
+.st-grid{stroke:var(--line);stroke-width:1}
+.st-ax{font:11px var(--mono, monospace);fill:var(--ink-3)}
+.st-n{font:10px var(--mono, monospace);fill:var(--ink-2)}
+.st-donut{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.st-dc{font:700 24px system-ui;fill:var(--ink)} .st-ds{font:11px system-ui;fill:var(--ink-3)}
+.st-leg{list-style:none;margin:0;padding:0;font-size:.8rem;color:var(--ink-2);display:flex;flex-direction:column;gap:4px}
+.st-leg li i,.st-leg span i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.st-leg li span{color:var(--ink-3)}
+.st-leg-h{flex-direction:row;flex-wrap:wrap;gap:12px;margin-top:8px}
+.st-note{font-size:.76rem;color:var(--ink-3);margin:8px 0 0}
+.st-vide{font-size:.84rem;color:var(--ink-3)}
 .bar{display:grid;grid-template-columns:132px 1fr 42px;gap:10px;align-items:center;margin-top:9px;font-size:.8rem}
 .bar:first-of-type{margin-top:0}
 .bar .track{background:var(--surface-2);border-radius:3px;height:12px;overflow:hidden}
@@ -310,9 +328,12 @@ details[open] summary{margin-bottom:8px}
 <section>
   <div class="sechead">
     <h2>Statistiques d'exploitation</h2>
-    <p>Ce que disent les passages sur la période couverte par les relevés.</p>
+    <p>La commune dans son ensemble, puis îlot par îlot : choisissez un îlot dans la liste.</p>
   </div>
-  <div class="tiles" id="tiles"></div>
+  <div class="st-choix"><label for="st-choix">Graphes pour :</label><select id="st-choix"></select></div>
+  <div class="st-carte" id="st-mois"></div>
+  <div class="st-ligne"><div class="st-carte" id="st-lettres"></div><div class="st-carte" id="st-crit"></div></div>
+  <div class="tiles" id="tiles" style="margin-top:12px"></div>
   <div class="bars" id="bars"></div>
 </section>
 
@@ -718,6 +739,75 @@ function rendu(){
         +'<span class="num">'+v.t+'</span></div>';
     }).join('')
     + '<div style="font-size:.74rem;color:var(--ink-3);margin-top:12px">La portion rouge indique les constats où des déchets étaient posés au sol.</div>';
+
+
+  /* ── Statistiques détaillées : commune puis îlot par îlot ──────────────────
+     Bâtons par mois (points de pénalité moyens par passage, empilés par critère),
+     camembert des Bac-Scores des passages, camembert de l'origine des pénalités. */
+  const TOUS_LOTS=passagesParSite(obs).flatMap(s=>s.lots.map(l=>Object.assign({site:s.site,nom:s.nom},l))).filter(l=>l.pts!==null);
+  const choix=document.getElementById('st-choix');
+  if(choix && !choix.dataset.init){
+    choix.dataset.init='1';
+    choix.innerHTML='<option value="">Toute la commune</option>'+sites.map(s=>'<option value="'+esc(s.site)+'">'+esc(s.site+' — '+s.nom)+'</option>').join('');
+    choix.addEventListener('change',()=>dessinerStats(choix.value));
+  }
+  function moisLib(k){ const [a,m]=k.split('-'); return new Date(+a,+m-1,1).toLocaleDateString('fr-FR',{month:'short',year:'2-digit'}); }
+  function donut(parts,centre,sous){
+    const tot=parts.reduce((a,p)=>a+p.v,0), R=70, r=44, C=90;
+    if(!tot) return '<p class="st-vide">Pas encore de données.</p>';
+    let a0=-Math.PI/2, arcs='';
+    parts.filter(p=>p.v>0).forEach(p=>{
+      const a1=a0+2*Math.PI*p.v/tot, grand=(a1-a0)>Math.PI?1:0;
+      const P=(ang,rr)=>(C+rr*Math.cos(ang)).toFixed(2)+' '+(C+rr*Math.sin(ang)).toFixed(2);
+      const d=(p.v===tot)
+        ? 'M '+P(0,R)+' A '+R+' '+R+' 0 1 1 '+P(Math.PI,R)+' A '+R+' '+R+' 0 1 1 '+P(0,R)+' M '+P(0,r)+' A '+r+' '+r+' 0 1 0 '+P(Math.PI,r)+' A '+r+' '+r+' 0 1 0 '+P(0,r)+' Z'
+        : 'M '+P(a0,R)+' A '+R+' '+R+' 0 '+grand+' 1 '+P(a1,R)+' L '+P(a1,r)+' A '+r+' '+r+' 0 '+grand+' 0 '+P(a0,r)+' Z';
+      arcs+='<path d="'+d+'" fill="'+p.c+'" fill-rule="evenodd"><title>'+esc(p.l+' : '+p.v+' ('+Math.round(100*p.v/tot)+' %)')+'</title></path>';
+      a0=a1;
+    });
+    return '<div class="st-donut"><svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="'+esc(parts.map(p=>p.l+' '+p.v).join(', '))+'">'+arcs
+      +'<text x="90" y="88" text-anchor="middle" class="st-dc">'+esc(centre)+'</text><text x="90" y="106" text-anchor="middle" class="st-ds">'+esc(sous)+'</text></svg>'
+      +'<ul class="st-leg">'+parts.map(p=>'<li><i style="background:'+p.c+'"></i>'+esc(p.l)+' <b>'+p.v+'</b> <span>'+(tot?Math.round(100*p.v/tot):0)+' %</span></li>').join('')+'</ul></div>';
+  }
+  function dessinerStats(site){
+    const lots=TOUS_LOTS.filter(l=>!site||l.site===site);
+    const titre=site?(sites.find(s=>s.site===site)||{}).nom||site:'toute la commune';
+    const parMois={};
+    lots.forEach(l=>{ const k=String(l.fin).slice(0,7); const m=parMois[k]=parMois[k]||{n:0,dep:0,c:{}}; m.n++; if(l.depot) m.dep++;
+      COMPO.forEach(c=>{ m.c[c.k]=(m.c[c.k]||0)+((l.crit&&l.crit[c.k])||0); }); });
+    let cles=Object.keys(parMois).sort();
+    if(cles.length){
+      const tout=[]; let [a,m]=cles[0].split('-').map(Number); const [a2,m2]=cles[cles.length-1].split('-').map(Number);
+      while(a<a2||(a===a2&&m<=m2)){ tout.push(a+'-'+String(m).padStart(2,'0')); m++; if(m>12){m=1;a++;} }
+      cles=tout.slice(-12);
+    }
+    const moy=k=>{ const m=parMois[k]; return m?COMPO.map(c=>({c,v:m.c[c.k]/m.n})):[]; };
+    const maxV=Math.max(1,...cles.map(k=>moy(k).reduce((a,x)=>a+x.v,0)));
+    const W=640,H=230,G=36,B=24,bw=Math.min(56,(W-G-10)/Math.max(1,cles.length)*0.62), pas=(W-G-10)/Math.max(1,cles.length);
+    let svg='';
+    [0,maxV/2,maxV].forEach(g=>{ const y=H-B-(H-B-14)*g/maxV; svg+='<line x1="'+G+'" x2="'+(W-6)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" class="st-grid"/><text x="'+(G-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" class="st-ax">'+(Math.round(g*10)/10)+'</text>'; });
+    cles.forEach((k,i)=>{
+      const x=G+pas*i+(pas-bw)/2; let y=H-B; const m=parMois[k];
+      moy(k).forEach(({c,v})=>{ const h=(H-B-14)*v/maxV; if(h<=0) return; y-=h;
+        svg+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" fill="'+c.c+'" rx="2"><title>'+esc(moisLib(k)+' · '+c.lab+' : '+(Math.round(v*10)/10)+' pt en moyenne')+'</title></rect>'; });
+      svg+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" class="st-ax">'+esc(moisLib(k))+'</text>'
+        +(m?'<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" text-anchor="middle" class="st-n">'+m.n+' pass.</text>':'');
+    });
+    document.getElementById('st-mois').innerHTML='<div class="st-t">Pénalités moyennes par passage, mois par mois — '+esc(titre)+'</div>'
+      +(cles.length?'<svg viewBox="0 0 '+W+' '+H+'" class="st-svg" role="img" aria-label="Points de pénalité moyens par passage et par mois">'+svg+'</svg>'
+        +'<div class="st-leg st-leg-h">'+COMPO.map(c=>'<span><i style="background:'+c.c+'"></i>'+esc(c.lab)+'</span>').join('')+'<span class="st-note">plus la barre est haute, plus le point est dégradé ; « pass. » = nombre de passages</span></div>'
+        :'<p class="st-vide">Pas encore de passage noté.</p>');
+    const parL={}; lots.forEach(l=>{ parL[l.L.l]=(parL[l.L.l]||0)+1; });
+    const moyPts=lots.length?Math.round(10*lots.reduce((a,l)=>a+l.pts,0)/lots.length)/10:0;
+    document.getElementById('st-lettres').innerHTML='<div class="st-t">Bac-Score des passages</div>'
+      +donut(BAR.echelle.map(e=>({l:e.l+' — '+e.lab,v:parL[e.l]||0,c:'var('+e.var+')'})),String(lots.length),'passages');
+    const tot={}; lots.forEach(l=>COMPO.forEach(c=>{ tot[c.k]=(tot[c.k]||0)+((l.crit&&l.crit[c.k])||0); }));
+    const dep=lots.filter(l=>l.depot).length;
+    document.getElementById('st-crit').innerHTML='<div class="st-t">Origine des points de pénalité</div>'
+      +donut(COMPO.map(c=>({l:c.lab,v:tot[c.k]||0,c:c.c})),String(moyPts),'pt / passage')
+      +'<p class="st-note">'+dep+' passage'+(dep>1?'s':'')+' sur '+lots.length+' avec un dépôt au sol ('+(lots.length?Math.round(100*dep/lots.length):0)+' %).</p>';
+  }
+  dessinerStats(choix?choix.value:'');
 
   // Barème du Bac-Score : entièrement décrit par bac-score.js
   document.getElementById('bareme').innerHTML = BAR.criteres.map(b=>
