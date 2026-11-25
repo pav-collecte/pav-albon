@@ -1,17 +1,16 @@
 /* Édition d'un îlot par un administrateur terrain : un crayon ✏️ sur chaque îlot.
-   - Visible seulement si cet appareil est reconnu administrateur (code saisi dans
-     l'appli de tournée, rôle « admin » vérifié par le serveur), ou après avoir saisi
-     son code via l'adresse ...?admin
+   - Uniquement dans l'appli de tournée : c'est là que le code est saisi et que le
+     rôle « admin » est vérifié par le serveur (la page météo est publique).
    - Le serveur revérifie le code à chaque enregistrement : masquer le crayon n'est
      qu'un confort, pas la sécurité.
    - Écrit via l'action « modifier » du serveur terrain : nom, conteneurs par flux,
      position (garder, GPS du téléphone ou coordonnées saisies).
-   Inclusion (page météo) : <script src="../edition.js" data-cartes="article.site" defer></script> */
+   Inclusion (appli de tournée) : <script src="edition.js" data-cartes="#round li:not(.vgs)" defer></script> */
 (function () {
   "use strict";
   var moi = document.currentScript; if (!moi || window.__pavEdition) return; window.__pavEdition = true;
   var BASE = new URL(".", moi.src).href;
-  var SEL = moi.dataset.cartes || "article.site";
+  var SEL = moi.dataset.cartes || "#round li:not(.vgs)";
   var CONF = {}, POINTS = {}, ENVOI = false;
 
   function lire(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -65,6 +64,8 @@
     + ".pav-crayon.in{position:static;flex:none;width:34px;height:34px;font-size:16px;margin-left:6px;box-shadow:none}"
     + ".pav-crayon:hover,.pav-crayon:focus{background:#FFF4DF;border-color:#E08A00}"
     + ".pav-ed-porte{position:relative}"
+    + ".pav-ed-li{display:flex!important;align-items:center;gap:6px}.pav-ed-li>button[data-code]{flex:1;min-width:0}"
+    + ".pav-ed-li>.pav-crayon.in{width:44px;height:44px;font-size:19px;border-radius:12px;margin-left:0}"
     + ".pav-ed-fond{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;padding:10px;overflow:auto}"
     + "@media(min-width:600px){.pav-ed-fond{align-items:center}}"
     + ".pav-ed{background:#fff;color:#1A1F1C;width:100%;max-width:420px;border-radius:14px;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif;max-height:94vh;overflow:auto}"
@@ -84,7 +85,8 @@
 
   /* ── Crayons sur les cartes ─────────────────────────────────────────────── */
   function codeDeCarte(el) {
-    var c = el.dataset.code || (el.querySelector(".site-code") || {}).textContent || "";
+    var b = el.querySelector("[data-code]");
+    var c = el.dataset.code || (b && b.dataset.code) || (el.querySelector(".site-code") || {}).textContent || "";
     var m = String(c).toUpperCase().match(/[A-Z0-9]+-\d+/); return m ? m[0] : "";
   }
   function poserCrayons() {
@@ -98,7 +100,9 @@
       b.title = "Modifier l'îlot " + c; b.setAttribute("aria-label", "Modifier l'îlot " + c);
       b.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); ouvrir(c); });
       var haut = el.querySelector(".site-top");
-      if (haut) { b.classList.add("in"); haut.appendChild(b); } else el.appendChild(b);
+      if (haut) { b.classList.add("in"); haut.appendChild(b); }
+      else if (el.tagName === "LI") { b.classList.add("in"); el.classList.add("pav-ed-li"); el.appendChild(b); }
+      else el.appendChild(b);
     });
   }
   function badge() {
@@ -212,29 +216,10 @@
     dessiner();
   }
 
-  /* ── Entrée « ?admin » : se déclarer administrateur sur cet appareil ─────── */
-  function demanderCode() {
-    var f = fenetre('<h3>Mode administrateur</h3><p class="sous">Saisis ton code administrateur (le même que dans l\'appli de tournée).</p>'
-      + '<input id="ed-code" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABC-XXXXXX" value="' + esc(code()) + '">'
-      + '<div class="msg" aria-live="polite"></div><div class="act"><button type="button" class="non">Annuler</button><button type="button" class="ok">Continuer</button></div>');
-    var box = f.querySelector(".pav-ed"), m = box.querySelector(".msg");
-    box.querySelector(".non").onclick = function () { f.remove(); };
-    box.querySelector(".ok").onclick = function () {
-      var v = box.querySelector("#ed-code").value.trim().toUpperCase(); if (!v) return;
-      var ancien = code(); ecrire("pav-code", v); m.className = "msg"; m.textContent = "Vérification…";
-      appeler("role", {}).then(function (j) {
-        if (!j.admin) throw new Error("Ce code n'est pas administrateur.");
-        ecrire("pav-admin", JSON.stringify({ code: v, admin: true, nom: j.nom || "", init: j.initialisation !== false }));
-        f.remove(); poserCrayons(); badge();
-      }).catch(function (er) { ecrire("pav-code", ancien); m.className = "msg err"; m.textContent = er.message; });
-    };
-  }
-
   fetch(BASE + "config.json", { cache: "no-cache" }).then(function (r) { return r.json(); }).catch(function () { return {}; }).then(function (c) {
     CONF = c || {};
-    if (/[?&]admin\b/.test(location.search) && !estAdmin()) demanderCode();
     poserCrayons(); badge();
-    var cible = document.querySelector("#sites") || document.body;
+    var cible = document.querySelector("#round") || document.body;
     new MutationObserver(function () { poserCrayons(); }).observe(cible, { childList: true, subtree: true });
   });
 })();
