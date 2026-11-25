@@ -45,6 +45,7 @@
     + ".pav-avis label{display:block;font-weight:600;font-size:.86rem;margin:10px 0 4px}"
     + ".pav-avis .etoiles{display:flex;gap:4px}.pav-avis .etoiles button{border:0;background:none;font-size:28px;line-height:1;color:#cfd5cf;cursor:pointer;padding:2px}"
     + ".pav-avis .etoiles button.on{color:#E08A00}"
+    + ".pav-avis .etoiles.coeurs button{font-size:32px}.pav-avis .etoiles.coeurs button.on{color:#D6334A}"
     + ".pav-avis textarea,.pav-avis input{width:100%;box-sizing:border-box;border:1px solid #D8DCD7;border-radius:9px;padding:9px 10px;font:inherit;font-size:16px}"
     + ".pav-avis textarea{min-height:84px;resize:vertical}"
     + ".pav-avis .piege{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}"
@@ -76,10 +77,11 @@
   /* Critères notés selon la page (3 au plus, tous facultatifs). */
   var CRIT = {
     collecte: [["simplicite", "Simplicité d'utilisation"], ["fiabilite", "Fiabilité (photos bien envoyées, pas de bug)"], ["rapidite", "Rapidité (temps passé par point)"]],
-    console: [["simplicite", "Simplicité d'utilisation"], ["fiabilite", "Fiabilité"], ["gain_temps", "Gain de temps"]],
+    console: [["simplicite", "Simplicité d'utilisation"], ["fiabilite", "Fiabilité"]],
     defaut: [["clarte", "Clarté de la page"], ["utilite", "Utilité"], ["justesse", "Justesse (les notes correspondent à ce qu'on voit sur place)"]]
   };
-  var CRITERES = CRIT[PAGE] || CRIT.defaut;
+  /* Premier critère : l'appréciation globale du système, notée avec des cœurs. */
+  var CRITERES = [["global", "Votre note globale du système", 1]].concat(CRIT[PAGE] || CRIT.defaut);
   var notes = {};
   function ouvrir() {
     var fond = document.createElement("div"); fond.className = "pav-avis-fond";
@@ -87,8 +89,8 @@
       + '<h3 id="pav-avis-t">Votre avis nous aide</h3>'
       + '<p>' + ({ collecte: "L'application de relevé est-elle simple à utiliser ?", encart: "L'encart sur le site de la commune est-il clair et utile ?", integrer: "Ces explications pour intégrer l'encart sont-elles simples à suivre ?", console: "La console est-elle simple à utiliser ?" }[PAGE] || "Cette page est-elle claire et utile ?") + '</p>'
       + CRITERES.map(function (c) {
-        return '<label>' + c[1] + '</label><div class="etoiles" role="radiogroup" data-c="' + c[0] + '" aria-label="' + c[1] + ' : note de 1 à 5">'
-          + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">★</button>'; }).join("") + '</div>';
+        return '<label>' + c[1] + '</label><div class="etoiles' + (c[2] ? ' coeurs' : '') + '" role="radiogroup" data-c="' + c[0] + '" aria-label="' + c[1] + ' : note de 1 à 5">'
+          + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">' + (c[2] ? '♥' : '★') + '</button>'; }).join("") + '</div>';
       }).join("")
       + '<label for="pav-avis-idee">Une idée, une remarque ? <span style="font-weight:400;color:#5d6a66">(facultatif)</span></label>'
       + '<textarea id="pav-avis-idee" maxlength="1500" placeholder="Ce qui vous a gêné, ce qui manque, ce qui vous plaît…"></textarea>'
