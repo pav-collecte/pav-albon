@@ -1,66 +1,10 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-24T10:31:01Z",
+ "maj": "2026-11-25T10:16:01Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
-   "site": "ALB-01",
-   "nom": "Îlot École Louise Michel",
-   "lat": 45.242644,
-   "lon": 4.851511,
-   "flux": "verre",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-01",
-   "nom": "Îlot École Louise Michel",
-   "lat": 45.242644,
-   "lon": 4.851511,
-   "flux": "ordures_menageres",
-   "nbUnites": 4
-  },
-  {
-   "site": "ALB-01",
-   "nom": "Îlot École Louise Michel",
-   "lat": 45.242644,
-   "lon": 4.851511,
-   "flux": "emballages",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-01",
-   "nom": "Îlot École Louise Michel",
-   "lat": 45.242644,
-   "lon": 4.851511,
-   "flux": "papier",
-   "nbUnites": 1
-  },
-  {
-   "site": "ALB-02",
-   "nom": "Îlot Saint-Martin-des-Rosiers",
-   "lat": 45.23763,
-   "lon": 4.871429,
-   "flux": "verre",
-   "nbUnites": 2
-  },
-  {
-   "site": "ALB-02",
-   "nom": "Îlot Saint-Martin-des-Rosiers",
-   "lat": 45.23763,
-   "lon": 4.871429,
-   "flux": "ordures_menageres",
-   "nbUnites": 4
-  },
-  {
-   "site": "ALB-02",
-   "nom": "Îlot Saint-Martin-des-Rosiers",
-   "lat": 45.23763,
-   "lon": 4.871429,
-   "flux": "emballages",
-   "nbUnites": 2
-  },
-  {
    "site": "ALB-03",
    "nom": "Îlot Route de l'Argentelle",
    "lat": 45.247801,
@@ -162,6 +106,70 @@
    "lat": 45.2601,
    "lon": 4.824026,
    "flux": "emballages",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-02",
+   "nom": "Îlot Saint-Martin-des-Rosiers",
+   "lat": 45.23763,
+   "lon": 4.871429,
+   "flux": "verre",
+   "nbUnites": 2
+  },
+  {
+   "site": "ALB-02",
+   "nom": "Îlot Saint-Martin-des-Rosiers",
+   "lat": 45.23763,
+   "lon": 4.871429,
+   "flux": "ordures_menageres",
+   "nbUnites": 4
+  },
+  {
+   "site": "ALB-02",
+   "nom": "Îlot Saint-Martin-des-Rosiers",
+   "lat": 45.23763,
+   "lon": 4.871429,
+   "flux": "emballages",
+   "nbUnites": 2
+  },
+  {
+   "site": "ALB-02",
+   "nom": "Îlot Saint-Martin-des-Rosiers",
+   "lat": 45.23763,
+   "lon": 4.871429,
+   "flux": "carton",
+   "nbUnites": 2
+  },
+  {
+   "site": "ALB-01",
+   "nom": "Îlot École Louise Michel",
+   "lat": 45.242644,
+   "lon": 4.851511,
+   "flux": "verre",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-01",
+   "nom": "Îlot École Louise Michel",
+   "lat": 45.242644,
+   "lon": 4.851511,
+   "flux": "ordures_menageres",
+   "nbUnites": 4
+  },
+  {
+   "site": "ALB-01",
+   "nom": "Îlot École Louise Michel",
+   "lat": 45.242644,
+   "lon": 4.851511,
+   "flux": "emballages",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-01",
+   "nom": "Îlot École Louise Michel",
+   "lat": 45.242644,
+   "lon": 4.851511,
+   "flux": "carton",
    "nbUnites": 1
   }
  ],
@@ -3453,6 +3461,139 @@
    "texte": "Colonne verte avec étiquette bleue entre le verre et les emballages, possible flux papier absent des postes attendus ; rien dessus ni au pied.",
    "personneVisible": false,
    "plaqueLisible": true
+  },
+  {
+   "uuid": "6402d9fa-18b3-41ca-81d8-1ea750b4d015",
+   "ts": "2026-11-25T10:10:10.631Z",
+   "site": "ALB-02",
+   "flux": "verre",
+   "photo": "1kXgOjg0iZfFTScQrOYe6vhCC8IxRnvqY",
+   "inaccessible": false,
+   "vues": 2,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": true,
+   "sacs": 2,
+   "cause": "indetermine",
+   "confiance": 0.85,
+   "texte": "Deux colonnes à verre (ouvertures rondes à bague verte) sans déchet posé dessus ni visible dans l'ouverture ; quelques petits détritus épars au pied de la colonne centrale.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "6402d9fa-18b3-41ca-81d8-1ea750b4d015",
+   "ts": "2026-11-25T10:10:10.631Z",
+   "site": "ALB-02",
+   "flux": "emballages",
+   "photo": "1kXgOjg0iZfFTScQrOYe6vhCC8IxRnvqY",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": true,
+   "sacs": 2,
+   "cause": "indetermine",
+   "confiance": 0.6,
+   "texte": "Colonne à autocollant bleu et ouvertures bleues (emballages/papiers) sans déchet dessus ; quelques morceaux de carton aplatis et petits détritus au pied côté droit ; flux identifié par l'étiquette, donc incertain.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "48fc8d8c-766a-41a4-bced-1a5ade042e8a",
+   "ts": "2026-11-25T10:10:44.325Z",
+   "site": "ALB-02",
+   "flux": "ordures_menageres",
+   "photo": "1rzKPKZrEQMvXm_g8sjNLhyZt3wdfl3o6",
+   "inaccessible": false,
+   "vues": 4,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.85,
+   "texte": "Quatre colonnes semi-enterrées à habillage en galets avec couvercle gris ; l'étiquette de la première indique « Ordures ménagères ». Aucun déchet posé dessus ni au sol, trappes fermées.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "8eba73ac-0868-4c1d-8c5b-e05a13cbab9d",
+   "ts": "2026-11-25T10:15:07.548Z",
+   "site": "ALB-01",
+   "flux": "papier",
+   "photo": "1Du4SeVLi2RVoEK8sspuzUqkgbnIBl_uN",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.4,
+   "texte": "Colonne bleue étiquetée « Papier Cartonnette » : flux papier absent des postes attendus (peut-être le poste carton) ; ouvertures sombres, rien dessus ni au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "8eba73ac-0868-4c1d-8c5b-e05a13cbab9d",
+   "ts": "2026-11-25T10:15:07.548Z",
+   "site": "ALB-01",
+   "flux": "emballages",
+   "photo": "1Du4SeVLi2RVoEK8sspuzUqkgbnIBl_uN",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.85,
+   "texte": "Colonne jaune avec trois ouvertures sombres, aucun déchet visible dans les ouvertures, dessus ou au pied ; seulement des feuilles mortes au sol.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "8eba73ac-0868-4c1d-8c5b-e05a13cbab9d",
+   "ts": "2026-11-25T10:15:07.548Z",
+   "site": "ALB-01",
+   "flux": "verre",
+   "photo": "1Du4SeVLi2RVoEK8sspuzUqkgbnIBl_uN",
+   "inaccessible": false,
+   "vues": 1,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.8,
+   "texte": "Colonne verte à verre en arrière-plan, partiellement masquée, aucun déchet visible dessus ni au pied.",
+   "personneVisible": false,
+   "plaqueLisible": false
+  },
+  {
+   "uuid": "fb55fd46-38c1-48db-bb6f-d8aa1be78449",
+   "ts": "2026-11-25T10:15:29.334Z",
+   "site": "ALB-01",
+   "flux": "ordures_menageres",
+   "photo": "1FPjj9AUcM9__z0t5GEAyuEcDRYsW9JAu",
+   "inaccessible": false,
+   "vues": 4,
+   "dessus": 0,
+   "bloquees": 0,
+   "pleines": 0,
+   "depotSol": false,
+   "sacs": 0,
+   "cause": "",
+   "confiance": 0.82,
+   "texte": "Quatre colonnes semi-enterrées à dôme gris, avec pictogramme de sac noir, sont visibles avec leurs trappes fermées. Rien n'est posé dessus et aucun sac n'est au sol, seulement quelques feuilles et petits papiers épars.",
+   "personneVisible": false,
+   "plaqueLisible": false
   }
  ]
 }
