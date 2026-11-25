@@ -17,7 +17,9 @@
   function ecrire(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
   function code() { return String(lire("pav-code") || "").trim().toUpperCase(); }
   function estAdmin() {
-    try { var a = JSON.parse(lire("pav-admin") || "null"); return !!(a && a.admin && a.code === code() && code()); } catch (e) { return false; }
+    /* « Mode agent » choisi dans l'appli (bouton en haut) : pas de crayon, même pour un admin. */
+if (lire("pav-mode") === "agent") return false;
+try { var a = JSON.parse(lire("pav-admin") || "null"); return !!(a && a.admin && a.code === code() && code()); } catch (e) { return false; }
   }
   function esc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   var FLUX = { verre: "Verre", ordures_menageres: "Ordures ménagères", emballages: "Emballages", papier: "Papier", carton: "Carton", textile: "Textile", biodechets: "Biodéchets" };
@@ -222,5 +224,11 @@
     poserCrayons(); badge();
     var cible = document.querySelector("#round") || document.body;
     new MutationObserver(function () { poserCrayons(); }).observe(cible, { childList: true, subtree: true });
+/* Bascule agent / admin depuis l'appli : on retire ou on repose crayons et badge. */
+window.addEventListener("pav-mode", function () {
+if (estAdmin()) { poserCrayons(); badge(); return; }
+document.querySelectorAll(".pav-crayon, .pav-ed-badge").forEach(function (x) { x.remove(); });
+document.querySelectorAll(".pav-ed-li").forEach(function (x) { x.classList.remove("pav-ed-li"); });
+});
   });
 })();
