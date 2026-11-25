@@ -147,6 +147,12 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .fd-ph figure{margin:0;flex:0 0 auto;width:220px}
 .fd-ph img{width:220px;height:165px;object-fit:cover;border-radius:8px;display:block;background:var(--surface-2)}
 .fd-ph figcaption{font-size:.72rem;color:var(--ink-3);margin-top:4px;font-family:var(--mono)}
+.pj-strip{margin:8px 0 2px}.pj-strip-t{font-size:.72rem;color:var(--ink-3);margin:0 0 6px;font-family:var(--mono)}
+.pj-strip-l{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.pj-strip-l a{position:relative;flex:none;display:block;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
+.pj-strip-l img{width:76px;height:58px;object-fit:cover;display:block}
+.pj-strip-l .pj-l{position:absolute;top:3px;left:3px}
+figure.preuve a{cursor:zoom-in}
 .pj-liste.pj2{display:block}
 .pj-liste .pj-hero{margin:0 0 12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;position:relative}
 .pj-liste .pj-hero img{width:100%;height:auto;max-height:min(62vh,520px);object-fit:cover;display:block;background:var(--surface-2)}
@@ -579,32 +585,38 @@ document.getElementById('pj-titre').textContent=(jour===auj?"Photos du jour":"Ph
 document.getElementById('pj-intro').textContent=(jour===auj?"Aujourd'hui":"Le "+new Date(dernier).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}))
 +" : toutes les photos, avec la note du passage.";
 let tri='date';
-/* Retour terrain : une grande photo (la plus mauvaise note du jour, avec le commentaire
-   de l'analyse), des vignettes, et une visionneuse dans la page (aucun lien Google). */
+/* Retour terrain : les photos vont dans la carte de chaque îlot (plus de rubrique à part).
+   Sous la photo principale, les vignettes du dernier relevé de l'îlot ; un appui ouvre une
+   visionneuse dans la page (flèches, glisser, Échap), sans aucun lien Google. */
+sec.hidden=true;
 const TXT={}; obs.forEach(o=>{ if(o.photo&&o.texte){ const t=TXT[o.photo]=TXT[o.photo]||[]; if(!t.includes(o.texte)) t.push(o.texte); } });
 const lettreDe=p=>'<span class="pj-l" style="background:'+(p.L?'var('+p.L.var+')':'var(--sOff)')+'" title="'+esc(p.L?'Bac-Score '+p.L.l+' — '+p.L.lab:'Non noté')+'">'+(p.L?p.L.l:'·')+'</span>';
 const heure=p=>new Date(p.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const nomP=p=>nomDe[p.site]||p.site;
+const parSite={};
+const dernierJour={}; obs.forEach(o=>{ if(o.photo&&o.ts&&o.site){ const j=jourDe(o.ts); if(!dernierJour[o.site]||j>dernierJour[o.site]) dernierJour[o.site]=j; } });
+obs.forEach(o=>{ if(!o.photo||!o.ts||!o.site||jourDe(o.ts)!==dernierJour[o.site]) return;
+const m=parSite[o.site]=parSite[o.site]||{};
+const p=m[o.photo]||(m[o.photo]={id:o.photo,site:o.site,ts:o.ts,flux:new Set(),prive:false});
+p.flux.add(FLUX_LABEL[o.flux]||o.flux); if(o.ts<p.ts) p.ts=o.ts; if(o.personneVisible||o.plaqueLisible) p.prive=true; });
+Object.keys(parSite).forEach(code=>{
+const l=Object.values(parSite[code]).map(p=>{ const lt=lotDe[p.id]; p.L=lt&&lt.L; p.pts=lt&&typeof lt.pts==='number'?lt.pts:-1; return p; }).filter(p=>!p.prive).sort((x,y)=>x.ts.localeCompare(y.ts));
+parSite[code]=l;
+const art=[...document.querySelectorAll('article.site')].find(x=>((x.querySelector('.site-code')||{}).textContent||'').includes(code));
+if(!art||!l.length) return;
+const fig=art.querySelector('figure.preuve');
+const lien=fig&&fig.querySelector('a');
+if(lien) lien.addEventListener('click',e=>{ e.preventDefault(); const im=lien.querySelector('img'); const p=l.find(q=>im&&im.src.includes(q.id))||l[l.length-1]; zoom(p.id,l); });
+if(l.length<2) return;
+const div=document.createElement('div'); div.className='pj-strip';
+const j=dernierJour[code];
+div.innerHTML='<div class="pj-strip-t">'+l.length+' photos '+(j===auj?"aujourd'hui":'le '+new Date(j+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'}))+'</div><div class="pj-strip-l">'
++l.map(p=>'<a href="#" data-zoom="'+esc(p.id)+'" data-site="'+esc(code)+'" title="'+esc(heure(p)+' · '+[...p.flux].join(', '))+'">'+lettreDe(p)+'<img src="'+urlVignette(p.id,240)+'" loading="lazy" alt="'+esc('Photo de '+nomP(p)+' à '+heure(p))+'"></a>').join('')+'</div>';
+if(fig) fig.after(div); else { const sb=art.querySelector('.scorebox'); if(sb) sb.after(div); else art.appendChild(div); }
+});
 let VUE=[];
-box.classList.add('pj2');
-function dessiner(){
-const l=liste.slice().sort(tri==='note'?(a,b)=>(b.pts-a.pts)||b.ts.localeCompare(a.ts):(a,b)=>b.ts.localeCompare(a.ts));
-if(!l.length){ box.innerHTML='<p class="pj-vide">Aucune photo ce jour-là.</p>'; return; }
-const hero=liste.filter(p=>!p.prive).sort((a,b)=>(b.pts-a.pts)||b.ts.localeCompare(a.ts))[0];
-const autres=l.filter(p=>!hero||p.id!==hero.id);
-VUE=(hero?[hero]:[]).concat(autres.filter(p=>!p.prive));
-let h='';
-if(hero){ const t=(TXT[hero.id]||[]).join(' ');
-h+='<figure class="pj-hero"><a href="#" data-zoom="'+esc(hero.id)+'" title="Agrandir">'+lettreDe(hero)+'<img src="'+urlVignette(hero.id,1200)+'" alt="'+esc('Photo de '+nomP(hero))+'"></a>'
-+'<figcaption><b>'+esc(nomP(hero))+'</b> · '+esc(heure(hero)+' · '+[...hero.flux].join(', '))+(hero.L?' · <b>'+esc(hero.L.l+' — '+hero.L.lab)+'</b>':'')
-+(t?'<span class="pj-txt">'+esc(t)+'</span>':'')+'</figcaption></figure>'; }
-if(autres.length) h+='<div class="pj-vigs">'+autres.map(p=>p.prive
-? '<figure class="pj-v">'+lettreDe(p)+'<div class="pj-np">Non publiée</div><figcaption>'+esc(nomP(p)+' · '+heure(p))+'</figcaption></figure>'
-: '<figure class="pj-v"><a href="#" data-zoom="'+esc(p.id)+'" title="Agrandir">'+lettreDe(p)+'<img src="'+urlVignette(p.id,300)+'" loading="lazy" alt="'+esc('Photo de '+nomP(p)+' à '+heure(p))+'"></a><figcaption>'+esc(nomP(p)+' · '+heure(p))+'</figcaption></figure>').join('')+'</div>';
-box.innerHTML=h;
-}
-function zoom(id){
-let i=VUE.findIndex(p=>p.id===id); if(i<0) return;
+function zoom(id,liste){
+VUE=liste||[]; let i=VUE.findIndex(p=>p.id===id); if(i<0) return;
 const f=document.createElement('div'); f.className='pj-zoom'; f.setAttribute('role','dialog'); f.setAttribute('aria-modal','true');
 const montrer=()=>{ const p=VUE[i], t=(TXT[p.id]||[]).join(' ');
 f.innerHTML='<button type="button" class="pz-x" aria-label="Fermer">×</button>'+(VUE.length>1?'<button type="button" class="pz-p" aria-label="Photo précédente">‹</button><button type="button" class="pz-n" aria-label="Photo suivante">›</button>':'')
@@ -618,14 +630,7 @@ let x0=null; f.addEventListener('touchstart',e=>{ x0=e.touches[0].clientX; },{pa
 f.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>50) aller(dx<0?1:-1); x0=null; });
 document.addEventListener('keydown',kb); document.body.appendChild(f); montrer();
 }
-box.addEventListener('click',e=>{ const a=e.target.closest('[data-zoom]'); if(!a) return; e.preventDefault(); zoom(a.dataset.zoom); });
-sec.querySelector('.pj-tri').onclick=e=>{
-const b=e.target.closest('button[data-tri]'); if(!b) return;
-tri=b.dataset.tri;
-sec.querySelectorAll('.pj-tri button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
-dessiner();
-};
-dessiner(); sec.hidden=false;
+document.addEventListener('click',e=>{ const a=e.target.closest('.pj-strip [data-zoom]'); if(!a) return; e.preventDefault(); zoom(a.dataset.zoom,parSite[a.dataset.site]); });
 })(); }catch(e){ console.warn('Photos du jour', e); } // jamais au détriment du reste de la page
 
 // Îlots
