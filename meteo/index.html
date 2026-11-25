@@ -599,11 +599,11 @@ obs.forEach(o=>{ if(!o.photo||!o.ts||!o.site||jourDe(o.ts)!==dernierJour[o.site]
 const m=parSite[o.site]=parSite[o.site]||{};
 const p=m[o.photo]||(m[o.photo]={id:o.photo,site:o.site,ts:o.ts,flux:new Set(),prive:false});
 p.flux.add(FLUX_LABEL[o.flux]||o.flux); if(o.ts<p.ts) p.ts=o.ts; if(o.personneVisible||o.plaqueLisible) p.prive=true; });
-Object.keys(parSite).forEach(code=>{
-const l=Object.values(parSite[code]).map(p=>{ const lt=lotDe[p.id]; p.L=lt&&lt.L; p.pts=lt&&typeof lt.pts==='number'?lt.pts:-1; return p; }).filter(p=>!p.prive).sort((x,y)=>x.ts.localeCompare(y.ts));
-parSite[code]=l;
+Object.keys(parSite).forEach(code=>{ parSite[code]=Object.values(parSite[code]).map(p=>{ const lt=lotDe[p.id]; p.L=lt&&lt.L; p.pts=lt&&typeof lt.pts==='number'?lt.pts:-1; return p; }).filter(p=>!p.prive).sort((x,y)=>x.ts.localeCompare(y.ts)); });
+/* Les cartes d'îlots peuvent être dessinées après ce code : on pose les vignettes quand elles sont là. */
+function poserBandeaux(){ Object.keys(parSite).forEach(code=>{ const l=parSite[code];
 const art=[...document.querySelectorAll('article.site')].find(x=>((x.querySelector('.site-code')||{}).textContent||'').includes(code));
-if(!art||!l.length) return;
+if(!art||!l.length||art.dataset.pjFait) return; art.dataset.pjFait='1';
 const fig=art.querySelector('figure.preuve');
 const lien=fig&&fig.querySelector('a');
 if(lien) lien.addEventListener('click',e=>{ e.preventDefault(); const im=lien.querySelector('img'); const p=l.find(q=>im&&im.src.includes(q.id))||l[l.length-1]; zoom(p.id,l); });
@@ -613,7 +613,9 @@ const j=dernierJour[code];
 div.innerHTML='<div class="pj-strip-t">'+l.length+' photos '+(j===auj?"aujourd'hui":'le '+new Date(j+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long'}))+'</div><div class="pj-strip-l">'
 +l.map(p=>'<a href="#" data-zoom="'+esc(p.id)+'" data-site="'+esc(code)+'" title="'+esc(heure(p)+' · '+[...p.flux].join(', '))+'">'+lettreDe(p)+'<img src="'+urlVignette(p.id,240)+'" loading="lazy" alt="'+esc('Photo de '+nomP(p)+' à '+heure(p))+'"></a>').join('')+'</div>';
 if(fig) fig.after(div); else { const sb=art.querySelector('.scorebox'); if(sb) sb.after(div); else art.appendChild(div); }
-});
+}); }
+poserBandeaux(); setTimeout(poserBandeaux,0); setTimeout(poserBandeaux,800);
+{ const gr=document.getElementById('sites'); if(gr) new MutationObserver(poserBandeaux).observe(gr,{childList:true}); }
 let VUE=[];
 function zoom(id,liste){
 VUE=liste||[]; let i=VUE.findIndex(p=>p.id===id); if(i<0) return;
