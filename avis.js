@@ -134,5 +134,45 @@
     var premier = fond.querySelector(".etoiles button"); if (premier) premier.focus();
   }
   tab.addEventListener("click", ouvrir);
+
+  /* Nouvelle version de l'application (version.json, écrit à chaque diffusion) :
+     un bandeau propose de mettre à jour. Vérifié chaque minute et au retour sur l'appli. */
+  if (PAGE !== "console" && !window.__pavMaj) {
+    window.__pavMaj = true;
+    var versionVue = null, bandeau = false;
+    var lireVersion = function () {
+      return fetch(BASE + "version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { return j && j.version ? String(j.version) : null; }).catch(function () { return null; });
+    };
+    var verifier = function () {
+      if (bandeau || document.hidden) return;
+      lireVersion().then(function (v) {
+        if (!v) return;
+        if (versionVue === null) { versionVue = v; return; }
+        if (v === versionVue) return;
+        bandeau = true;
+        var b = document.createElement("div");
+        b.setAttribute("role", "alert");
+        b.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:95;background:#C9752B;color:#fff;padding:14px 16px;font:700 17px system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center";
+        b.innerHTML = '🆕 Nouvelle version de l\'application disponible.<button type="button" style="border:0;border-radius:10px;padding:10px 18px;font:800 16px system-ui,sans-serif;background:#fff;color:#1F3A2E;cursor:pointer">Mettre à jour maintenant</button>';
+        b.querySelector("button").addEventListener("click", function () {
+          var aller = function () { location.replace(location.pathname + "?maj=" + Date.now() + location.hash); };
+          try {
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistration) {
+              navigator.serviceWorker.getRegistration().then(function (reg) { return reg && reg.update(); }).catch(function () {}).then(aller);
+              setTimeout(aller, 2500);
+              return;
+            }
+          } catch (e) {}
+          aller();
+        });
+        document.body.appendChild(b);
+      });
+    };
+    verifier();
+    setInterval(verifier, 60 * 1000);
+    document.addEventListener("visibilitychange", verifier);
+    window.addEventListener("focus", verifier);
+  }
   if (VIA_ENCART) setTimeout(ouvrir, 400);
 })();
