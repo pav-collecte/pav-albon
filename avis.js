@@ -7,6 +7,10 @@
   "use strict";
   var moi = document.currentScript; if (!moi || window.__pavAvis) return; window.__pavAvis = true;
   var PAGE = moi.dataset.page || "autre";
+  /* Arrivée depuis le bouton « Votre avis » de l'encart posé sur le site de la mairie :
+     le formulaire s'ouvre tout seul et l'avis est étiqueté « encart ». */
+  var VIA_ENCART = /[?&]avis=/.test(location.search) || location.hash === "#avis";
+  if (VIA_ENCART) PAGE = "encart";
   var BASE = new URL(".", moi.src).href;
   var URL_AVIS = "https://n8n.srv1040760.hstgr.cloud/webhook/pav-avis";
   var CLE = "pav-avis-envoye";
@@ -56,7 +60,7 @@
 
   /* Bulle d'invitation : au plus une fois par jour, jamais après un envoi récent. */
   var CLE_BULLE = "pav-avis-bulle";
-  if (!dejaEnvoye && !(Number(lire(CLE_BULLE)) > Date.now() - 864e5)) {
+  if (!VIA_ENCART && !dejaEnvoye && !(Number(lire(CLE_BULLE)) > Date.now() - 864e5)) {
     setTimeout(function () {
       if (document.querySelector(".pav-avis-fond")) return;
       var b = document.createElement("div"); b.className = "pav-avis-bulle"; b.setAttribute("role", "status");
@@ -73,7 +77,7 @@
     var fond = document.createElement("div"); fond.className = "pav-avis-fond";
     fond.innerHTML = '<form class="pav-avis" role="dialog" aria-modal="true" aria-labelledby="pav-avis-t">'
       + '<h3 id="pav-avis-t">Votre avis nous aide</h3>'
-      + '<p>' + (PAGE === "collecte" ? "L'application de relevé est-elle simple à utiliser ?" : "Cette page est-elle claire et utile ?") + '</p>'
+      + '<p>' + ({ collecte: "L'application de relevé est-elle simple à utiliser ?", encart: "L'encart sur le site de la commune est-il clair et utile ?", integrer: "Ces explications pour intégrer l'encart sont-elles simples à suivre ?" }[PAGE] || "Cette page est-elle claire et utile ?") + '</p>'
       + '<label>Simplicité d\'utilisation</label><div class="etoiles" role="radiogroup" aria-label="Note de 1 à 5">'
       + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">★</button>'; }).join("") + '</div>'
       + '<label for="pav-avis-idee">Une idée, une remarque ? <span style="font-weight:400;color:#5d6a66">(facultatif)</span></label>'
@@ -115,4 +119,5 @@
     var premier = fond.querySelector(".etoiles button"); if (premier) premier.focus();
   }
   tab.addEventListener("click", ouvrir);
+  if (VIA_ENCART) setTimeout(ouvrir, 400);
 })();
