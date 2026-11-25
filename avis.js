@@ -43,7 +43,7 @@
     + "margin-bottom:env(safe-area-inset-bottom,0px)}"
     + ".pav-avis h3{margin:0 0 4px;font-size:1.05rem}.pav-avis p{margin:0 0 10px;color:#5d6a66;font-size:.86rem}"
     + ".pav-avis label{display:block;font-weight:600;font-size:.86rem;margin:10px 0 4px}"
-    + ".pav-avis .etoiles{display:flex;gap:4px}.pav-avis .etoiles button{border:0;background:none;font-size:30px;line-height:1;color:#cfd5cf;cursor:pointer;padding:2px}"
+    + ".pav-avis .etoiles{display:flex;gap:4px}.pav-avis .etoiles button{border:0;background:none;font-size:28px;line-height:1;color:#cfd5cf;cursor:pointer;padding:2px}"
     + ".pav-avis .etoiles button.on{color:#E08A00}"
     + ".pav-avis textarea,.pav-avis input{width:100%;box-sizing:border-box;border:1px solid #D8DCD7;border-radius:9px;padding:9px 10px;font:inherit;font-size:16px}"
     + ".pav-avis textarea{min-height:84px;resize:vertical}"
@@ -73,14 +73,23 @@
     }, 2500);
   }
 
-  var note = 0;
+  /* Critères notés selon la page (3 au plus, tous facultatifs). */
+  var CRIT = {
+    collecte: [["simplicite", "Simplicité d'utilisation"], ["fiabilite", "Fiabilité (photos bien envoyées, pas de bug)"], ["rapidite", "Rapidité (temps passé par point)"]],
+    console: [["simplicite", "Simplicité d'utilisation"], ["fiabilite", "Fiabilité"], ["gain_temps", "Gain de temps"]],
+    defaut: [["clarte", "Clarté de la page"], ["utilite", "Utilité"], ["justesse", "Justesse (les notes correspondent à ce qu'on voit sur place)"]]
+  };
+  var CRITERES = CRIT[PAGE] || CRIT.defaut;
+  var notes = {};
   function ouvrir() {
     var fond = document.createElement("div"); fond.className = "pav-avis-fond";
     fond.innerHTML = '<form class="pav-avis" role="dialog" aria-modal="true" aria-labelledby="pav-avis-t">'
       + '<h3 id="pav-avis-t">Votre avis nous aide</h3>'
       + '<p>' + ({ collecte: "L'application de relevé est-elle simple à utiliser ?", encart: "L'encart sur le site de la commune est-il clair et utile ?", integrer: "Ces explications pour intégrer l'encart sont-elles simples à suivre ?", console: "La console est-elle simple à utiliser ?" }[PAGE] || "Cette page est-elle claire et utile ?") + '</p>'
-      + '<label>Simplicité d\'utilisation</label><div class="etoiles" role="radiogroup" aria-label="Note de 1 à 5">'
-      + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">★</button>'; }).join("") + '</div>'
+      + CRITERES.map(function (c) {
+        return '<label>' + c[1] + '</label><div class="etoiles" role="radiogroup" data-c="' + c[0] + '" aria-label="' + c[1] + ' : note de 1 à 5">'
+          + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">★</button>'; }).join("") + '</div>';
+      }).join("")
       + '<label for="pav-avis-idee">Une idée, une remarque ? <span style="font-weight:400;color:#5d6a66">(facultatif)</span></label>'
       + '<textarea id="pav-avis-idee" maxlength="1500" placeholder="Ce qui vous a gêné, ce qui manque, ce qui vous plaît…"></textarea>'
       + '<label for="pav-avis-contact">Pour une réponse <span style="font-weight:400;color:#5d6a66">(facultatif)</span></label>'
@@ -94,26 +103,29 @@
     fond.addEventListener("click", function (e) { if (e.target === fond) fermer(); });
     fond.querySelector(".non").addEventListener("click", fermer);
     document.addEventListener("keydown", function esc(e) { if (e.key === "Escape" && document.body.contains(fond)) { fermer(); document.removeEventListener("keydown", esc); } });
+    notes = {};
     fond.querySelectorAll(".etoiles button").forEach(function (b) {
       b.addEventListener("click", function () {
-        note = Number(b.dataset.n);
-        fond.querySelectorAll(".etoiles button").forEach(function (x) { var on = Number(x.dataset.n) <= note; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(Number(x.dataset.n) === note)); });
+        var g = b.closest(".etoiles"), n = Number(b.dataset.n);
+        notes[g.dataset.c] = n;
+        g.querySelectorAll("button").forEach(function (x) { var on = Number(x.dataset.n) <= n; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(Number(x.dataset.n) === n)); });
       });
     });
     f.addEventListener("submit", function (e) {
       e.preventDefault();
       var idee = fond.querySelector("#pav-avis-idee").value.trim();
-      if (!note && !idee) { m.style.color = "#B3261E"; m.textContent = "Choisissez une note ou écrivez une idée."; return; }
+      var note = notes[CRITERES[0][0]] || 0;
+      if (!Object.keys(notes).length && !idee) { m.style.color = "#B3261E"; m.textContent = "Choisissez une note ou écrivez une idée."; return; }
       var ok = f.querySelector(".ok"); ok.disabled = true; m.style.color = "#5d6a66"; m.textContent = "Envoi…";
       fetch(URL_AVIS, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-        page: PAGE, commune: commune, note: note || "", idee: idee, contact: fond.querySelector("#pav-avis-contact").value.trim(),
+        page: PAGE, commune: commune, note: note || "", notes: JSON.stringify(notes), idee: idee, contact: fond.querySelector("#pav-avis-contact").value.trim(),
         site_web: f.querySelector(".piege").value, appareil: (navigator.userAgent || "").slice(0, 120) }) })
         .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
         .then(function (j) {
           if (!j.ok) throw new Error(j.motif || "Envoi impossible pour le moment.");
           ecrire(CLE, String(Date.now())); tab.classList.add("discret"); tab.innerHTML = '<span class="ic" aria-hidden="true">💡</span>Votre avis';
           f.innerHTML = '<h3>Merci !</h3><p>Votre avis a bien été transmis à l\'équipe du projet.</p><div class="act"><button type="button" class="ok">Fermer</button></div>';
-          f.querySelector(".ok").addEventListener("click", fermer); note = 0;
+          f.querySelector(".ok").addEventListener("click", fermer); notes = {};
         })
         .catch(function (er) { ok.disabled = false; m.style.color = "#B3261E"; m.textContent = er.message || "Envoi impossible pour le moment."; });
     });
