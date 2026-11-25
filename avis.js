@@ -1,4 +1,4 @@
-/* Encart « Votre avis » : un onglet discret sur le bord droit, qui ouvre un petit
+/* Encart « Votre avis » : un onglet bien visible sur le bord droit (+ bulle d'invitation), qui ouvre un petit
    formulaire (note de simplicité 1 à 5, idée, contact facultatif). Les avis vont
    dans l'onglet « Avis » du classeur commun via n8n. Rien n'est envoyé sans clic.
    Inclusion : <script src="avis.js" data-page="collecte" defer></script>
@@ -19,11 +19,19 @@
 
   var css = document.createElement("style");
   css.textContent =
-    ".pav-avis-tab{position:fixed;right:0;top:58%;z-index:45;transform:translateY(-50%);writing-mode:vertical-rl;transform-origin:center;"
-    + "background:#1F3A2E;color:#fff;border:0;border-radius:10px 0 0 10px;padding:12px 7px;font:600 13px system-ui,sans-serif;letter-spacing:.02em;"
-    + "box-shadow:-2px 2px 10px rgba(0,0,0,.18);cursor:pointer;opacity:.88}"
-    + ".pav-avis-tab:hover,.pav-avis-tab:focus{opacity:1}"
-    + ".pav-avis-tab.discret{padding:9px 5px;font-size:12px;opacity:.6}"
+    ".pav-avis-tab{position:fixed;right:0;top:50%;z-index:45;transform:translateY(-50%);writing-mode:vertical-rl;"
+    + "background:#E08A00;color:#fff;border:0;border-radius:16px 0 0 16px;padding:22px 13px;font:700 17px/1 system-ui,sans-serif;letter-spacing:.03em;"
+    + "box-shadow:-4px 4px 18px rgba(0,0,0,.28);cursor:pointer;animation:pavAvisPulse 2.2s ease-in-out 3}"
+    + ".pav-avis-tab .ic{writing-mode:horizontal-tb;font-size:24px;margin-bottom:8px;display:block}"
+    + ".pav-avis-tab:hover,.pav-avis-tab:focus{background:#C77700;padding-right:17px}"
+    + ".pav-avis-tab.discret{background:#1F3A2E;padding:16px 10px;font-size:14px;animation:none}"
+    + ".pav-avis-tab.discret .ic{font-size:19px}"
+    + "@keyframes pavAvisPulse{0%,100%{box-shadow:-4px 4px 18px rgba(0,0,0,.28)}50%{box-shadow:-4px 4px 18px rgba(0,0,0,.28),0 0 0 10px rgba(224,138,0,.28)}}"
+    + ".pav-avis-bulle{position:fixed;right:62px;top:50%;transform:translateY(-50%);z-index:45;background:#fff;color:#1A1F1C;border:2px solid #E08A00;border-radius:14px;"
+    + "padding:12px 14px;max-width:220px;font:600 15px/1.35 system-ui,sans-serif;box-shadow:0 6px 22px rgba(0,0,0,.2);cursor:pointer;transition:opacity .4s}"
+    + ".pav-avis-bulle:after{content:'';position:absolute;right:-9px;top:50%;margin-top:-8px;border:8px solid transparent;border-right:0;border-left-color:#E08A00}"
+    + ".pav-avis-bulle small{display:block;font-weight:400;color:#5d6a66;font-size:13px;margin-top:3px}"
+    + "@media(max-width:600px){.pav-avis-tab{padding:18px 11px;font-size:16px}.pav-avis-bulle{right:56px;max-width:180px;font-size:14px}}"
     + ".pav-avis-fond{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center;padding:12px}"
     + "@media(min-width:600px){.pav-avis-fond{align-items:center}}"
     + ".pav-avis{background:#fff;color:#1A1F1C;width:100%;max-width:360px;border-radius:14px;padding:16px 16px 14px;box-shadow:0 10px 40px rgba(0,0,0,.3);font:15px/1.4 system-ui,sans-serif;"
@@ -42,9 +50,23 @@
 
   var tab = document.createElement("button");
   tab.type = "button"; tab.className = "pav-avis-tab" + (dejaEnvoye ? " discret" : "");
-  tab.textContent = dejaEnvoye ? "💡 Avis" : "💡 Votre avis";
+  tab.innerHTML = '<span class="ic" aria-hidden="true">💡</span>' + (dejaEnvoye ? "Votre avis" : "Donnez votre avis");
   tab.setAttribute("aria-label", "Donner votre avis ou une idée");
   document.body.appendChild(tab);
+
+  /* Bulle d'invitation : au plus une fois par jour, jamais après un envoi récent. */
+  var CLE_BULLE = "pav-avis-bulle";
+  if (!dejaEnvoye && !(Number(lire(CLE_BULLE)) > Date.now() - 864e5)) {
+    setTimeout(function () {
+      if (document.querySelector(".pav-avis-fond")) return;
+      var b = document.createElement("div"); b.className = "pav-avis-bulle"; b.setAttribute("role", "status");
+      b.innerHTML = "Une idée pour améliorer ?<small>30 secondes, c'est anonyme.</small>";
+      document.body.appendChild(b); ecrire(CLE_BULLE, String(Date.now()));
+      b.addEventListener("click", function () { b.remove(); ouvrir(); });
+      tab.addEventListener("click", function () { b.remove(); });
+      setTimeout(function () { b.style.opacity = "0"; setTimeout(function () { b.remove(); }, 450); }, 9000);
+    }, 2500);
+  }
 
   var note = 0;
   function ouvrir() {
@@ -84,7 +106,7 @@
         .then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
         .then(function (j) {
           if (!j.ok) throw new Error(j.motif || "Envoi impossible pour le moment.");
-          ecrire(CLE, String(Date.now())); tab.classList.add("discret"); tab.textContent = "💡 Avis";
+          ecrire(CLE, String(Date.now())); tab.classList.add("discret"); tab.innerHTML = '<span class="ic" aria-hidden="true">💡</span>Votre avis';
           f.innerHTML = '<h3>Merci !</h3><p>Votre avis a bien été transmis à l\'équipe du projet.</p><div class="act"><button type="button" class="ok">Fermer</button></div>';
           f.querySelector(".ok").addEventListener("click", fermer); note = 0;
         })
