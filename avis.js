@@ -14,8 +14,9 @@
   var BASE = new URL(".", moi.src).href;
   var URL_AVIS = "https://n8n.srv1040760.hstgr.cloud/webhook/pav-avis";
   var CLE = "pav-avis-envoye";
-  var commune = "";
-  fetch(BASE + "config.json", { cache: "no-cache" }).then(function (r) { return r.json(); })
+  /* data-commune force la commune (ex. « Console ») ; sinon on lit le config.json de la commune. */
+  var commune = moi.dataset.commune || "";
+  if (!commune) fetch(BASE + "config.json", { cache: "no-cache" }).then(function (r) { return r.json(); })
     .then(function (c) { commune = (c.commune && (c.commune.nom || c.commune)) || ""; }).catch(function () {});
   function lire(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function ecrire(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -77,7 +78,7 @@
     var fond = document.createElement("div"); fond.className = "pav-avis-fond";
     fond.innerHTML = '<form class="pav-avis" role="dialog" aria-modal="true" aria-labelledby="pav-avis-t">'
       + '<h3 id="pav-avis-t">Votre avis nous aide</h3>'
-      + '<p>' + ({ collecte: "L'application de relevé est-elle simple à utiliser ?", encart: "L'encart sur le site de la commune est-il clair et utile ?", integrer: "Ces explications pour intégrer l'encart sont-elles simples à suivre ?" }[PAGE] || "Cette page est-elle claire et utile ?") + '</p>'
+      + '<p>' + ({ collecte: "L'application de relevé est-elle simple à utiliser ?", encart: "L'encart sur le site de la commune est-il clair et utile ?", integrer: "Ces explications pour intégrer l'encart sont-elles simples à suivre ?", console: "La console est-elle simple à utiliser ?" }[PAGE] || "Cette page est-elle claire et utile ?") + '</p>'
       + '<label>Simplicité d\'utilisation</label><div class="etoiles" role="radiogroup" aria-label="Note de 1 à 5">'
       + [1, 2, 3, 4, 5].map(function (i) { return '<button type="button" data-n="' + i + '" role="radio" aria-checked="false" aria-label="' + i + ' sur 5">★</button>'; }).join("") + '</div>'
       + '<label for="pav-avis-idee">Une idée, une remarque ? <span style="font-weight:400;color:#5d6a66">(facultatif)</span></label>'
