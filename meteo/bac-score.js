@@ -525,7 +525,11 @@ export function calcule(REF,obs){
     if(o.agentPropre) bouts.push("signalé propre par l'agent");
     if(nRecid>1) bouts.push(nRecid+" passages avec dépôt sur "+B.recidive.fenetreJours+" j"+(sc.rc===0&&!o.depotSol&&B.recidive.seulementSiDepot?" (sans pénalité : rien au sol aujourd'hui)":""));
     B=b0; LCOUR=l0; FENETRE_PASSAGE=f0;
-    parSite[site].flux.push({flux,niveau,horsRef,sc,bar:infoVersion(h0),detail:bouts.join(" · "),ts:o.ts,test:o.test,
+    /* Remplissage du poste pour la jauge du site : pleins ou bloqués sur
+       l'effectif connu ; les conteneurs non photographiés comptent disponibles. */
+    const rempl=ref.n&&!ref.provisoire&&!(o.vues===0&&!o.inaccessible)
+      ? {occ:o.inaccessible?ref.n:Math.min(ref.n,(o.bloquees||0)+(o.pleines||0)),tot:ref.n} : null;
+    parSite[site].flux.push({flux,niveau,horsRef,sc,rempl,bar:infoVersion(h0),detail:bouts.join(" · "),ts:o.ts,test:o.test,
       photo:o.photo||"", publiable:!!o.photo && !o.personneVisible && !o.plaqueLisible, texte:o.texte||""});
     if(!parSite[site].dernier||new Date(o.ts)>new Date(parSite[site].dernier)) parSite[site].dernier=o.ts;
   });
@@ -545,6 +549,9 @@ export function calcule(REF,obs){
     const mp=moyennePhotos(REF,obs,obs.filter(o=>o.site===s.site&&o.photo),true);
     if(mp){ s.pts=mp.pts; s.L=sous(mp.ts,()=>lettre(mp.pts)); s.nPhotos=mp.n; s.ptsMoyen=mp.moy; s.plancherAgent=mp.plancher; }
     s.flux.sort((a,b)=>(ORDRE_FLUX[a.flux]??9)-(ORDRE_FLUX[b.flux]??9));
+    /* Jauge de remplissage du site : tous flux confondus. */
+    const rs=s.flux.filter(f=>f.rempl), tot=rs.reduce((a,f)=>a+f.rempl.tot,0), occ=rs.reduce((a,f)=>a+f.rempl.occ,0);
+    s.remplissage=tot?{occ,tot,taux:occ/tot,pleinFlux:rs.filter(f=>f.rempl.occ>=f.rempl.tot).map(f=>f.flux)}:null;
   });
   return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
 }
