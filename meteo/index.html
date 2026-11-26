@@ -152,6 +152,11 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .pj-strip-l a{position:relative;flex:none;display:block;border-radius:7px;overflow:hidden;border:1px solid var(--line)}
 .pj-strip-l img{width:76px;height:58px;object-fit:cover;display:block}
 .pj-strip-l .pj-l{position:absolute;top:3px;left:3px}
+.pj-ag{position:absolute;right:3px;top:3px;padding:1px 5px;border-radius:5px;background:rgba(255,255,255,.92);color:#1d2420;font:600 .62rem var(--mono);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pj-zoom .pj-ag{position:static}
+.fd-ph figure a{position:relative;display:block}
+.fd-pn{position:absolute;top:6px;left:6px;padding:2px 7px;border-radius:6px;color:#fff;font:700 .8rem var(--mono);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.fd-ag{display:block;margin-top:3px;color:#8a5a00;font-size:.74rem}
 .pj-pts{position:absolute;right:3px;bottom:3px;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.62);color:#fff;font:600 .68rem var(--mono)}
 .pj-zoom .pj-pts{position:static;background:rgba(255,255,255,.18);margin-left:4px;vertical-align:middle}
 figure.preuve a{cursor:zoom-in}
@@ -565,6 +570,18 @@ function rendu(){
       +(n>1?' · '+n+' photos ce jour-là':'')+'</figcaption></figure>';
   }
 
+  /* Note d'une photo et rôle de l'agent : utilisés par les miniatures des
+     cartes, la visionneuse et le détail de la frise. */
+  function agentPhoto(id,liste){
+    const rows=liste.filter(o=>o.photo===id); if(!rows.length) return null;
+    if(rows.some(o=>/^Signalé propre par l'agent/.test(o.texte||""))) return {tag:"Propre",txt:"Signalé « Propre » par l'agent : son constat prime sur l'analyse de la photo."};
+    if(rows.some(o=>o.agentPropre)) return {tag:"Propre",txt:"Notée propre : l'agent a signalé l'îlot « Propre » pendant ce passage."};
+    const s=[rows.some(o=>o.agentPlein)?"Plein":"",rows.some(o=>o.agentSale)?"Sale":""].filter(Boolean);
+    if(s.length) return {tag:s.join(", "),txt:"Signalé « "+s.join(" » et « ")+" » par l'agent : la note de cette photo est un minimum pour l'îlot."};
+    return null;
+  }
+  function pastilleAgent(a){ return a?'<span class="pj-ag" title="'+esc(a.txt)+'">👤 '+esc(a.tag)+'</span>':''; }
+
   /* Photos du jour (avis AV-MWW2UCSW-3) : toutes les photos du dernier jour de
 relevé, triées par heure ou par plus mauvaise note. La note est celle du
 passage auquel la photo appartient. Une photo où une personne ou une plaque
@@ -598,7 +615,7 @@ sec.hidden=true;
 const TXT={}; obs.forEach(o=>{ if(o.photo&&o.texte){ const t=TXT[o.photo]=TXT[o.photo]||[]; if(!t.includes(o.texte)) t.push(o.texte); } });
 const lettreDe=p=>'<span class="pj-l" style="background:'+(p.L?'var('+p.L.var+')':'var(--sOff)')+'" title="'+esc(p.L?'Bac-Score '+p.L.l+' — '+p.L.lab:'Non noté')+'">'+(p.L?p.L.l:'·')+'</span>';
 const lettrePhoto=p=>'<span class="pj-l" style="background:'+(p.Lph?'var('+p.Lph.var+')':'var(--sOff)')+'" title="'+esc(p.Lph?'Cette photo : '+p.Lph.l+' — '+p.ptsPh+' point'+(p.ptsPh>1?'s':'')+(p.L?' (passage : '+p.L.l+')':''):'Photo non notée')+'">'+(p.Lph?p.Lph.l:'·')+'</span>'
-  +(p.Lph?'<span class="pj-pts">'+p.ptsPh+' pt'+(p.ptsPh>1?'s':'')+'</span>':'');
+  +(p.Lph?'<span class="pj-pts">'+p.ptsPh+' pt'+(p.ptsPh>1?'s':'')+'</span>':'')+pastilleAgent(p.ag);
 const heure=p=>new Date(p.ts).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
 const nomP=p=>nomDe[p.site]||p.site;
 const parSite={};
@@ -609,7 +626,7 @@ const p=m[o.photo]||(m[o.photo]={id:o.photo,site:o.site,ts:o.ts,flux:new Set(),p
 p.flux.add(FLUX_LABEL[o.flux]||o.flux); if(o.ts<p.ts) p.ts=o.ts; if(o.personneVisible||o.plaqueLisible) p.prive=true; });
 Object.keys(parSite).forEach(code=>{ parSite[code]=Object.values(parSite[code]).map(p=>{ const lt=lotDe[p.id]; p.L=lt&&lt.L; p.pts=lt&&typeof lt.pts==='number'?lt.pts:-1;
   /* La note de la photo elle-même (miniatures et visionneuse), en plus de celle du passage. */
-  const np=notePhotoAvec(REF,obs,p.id); p.Lph=np&&np.L; p.ptsPh=np?np.pts:null; return p; }).filter(p=>!p.prive).sort((x,y)=>x.ts.localeCompare(y.ts)); });
+  const np=notePhotoAvec(REF,obs,p.id); p.Lph=np&&np.L; p.ptsPh=np?np.pts:null; p.ag=agentPhoto(p.id,obs); return p; }).filter(p=>!p.prive).sort((x,y)=>x.ts.localeCompare(y.ts)); });
 /* Les cartes d'îlots peuvent être dessinées après ce code : on pose les vignettes quand elles sont là. */
 function poserBandeaux(){ Object.keys(parSite).forEach(code=>{ const l=parSite[code];
 const art=[...document.querySelectorAll('article.site')].find(x=>((x.querySelector('.site-code')||{}).textContent||'').includes(code));
@@ -634,6 +651,7 @@ const montrer=()=>{ const p=VUE[i], t=(TXT[p.id]||[]).join(' ');
 f.innerHTML='<button type="button" class="pz-x" aria-label="Fermer">×</button>'+(VUE.length>1?'<button type="button" class="pz-p" aria-label="Photo précédente">‹</button><button type="button" class="pz-n" aria-label="Photo suivante">›</button>':'')
 +'<figure><img src="'+urlVignette(p.id,1600)+'" alt="'+esc('Photo de '+nomP(p))+'"><figcaption>'+lettrePhoto(p)+' <b>'+esc(nomP(p))+'</b> · '+esc(heure(p)+' · '+[...p.flux].join(', '))
 +(p.Lph?' · '+esc('cette photo : '+p.Lph.l+' — '+p.Lph.lab+', '+p.ptsPh+' point'+(p.ptsPh>1?'s':'')):'')+(p.L?' · '+esc('passage : '+p.L.l):'')
++(p.ag?'<span class="pj-txt">👤 '+esc(p.ag.txt)+'</span>':'')
 +(t?'<span class="pj-txt">'+esc(t)+'</span>':'')+'<span class="pz-c">'+(i+1)+' / '+VUE.length+'</span></figcaption></figure>'; };
 const aller=s=>{ i=(i+s+VUE.length)%VUE.length; montrer(); };
 const kb=e=>{ if(e.key==='Escape') fermer(); else if(e.key==='ArrowLeft') aller(-1); else if(e.key==='ArrowRight') aller(1); };
@@ -745,7 +763,10 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
       const leg=esc(h+' · '+[...new Set(rows.map(o=>FLUX_LABEL[o.flux]||o.flux))].join(', '));
       if(rows.some(o=>o.personneVisible||o.plaqueLisible))
         return '<figure><div class="fd-np">Photo non publiée : une personne ou une plaque y est reconnaissable.</div><figcaption>'+leg+'</figcaption></figure>';
-      return '<figure><a href="'+urlPhoto(id)+'" target="_blank" rel="noopener"><img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg+'</figcaption></figure>';
+      const np=notePhotoAvec(REF,obs,id), ag=agentPhoto(id,obs);
+      const note=np?'<span class="fd-pn" style="background:var('+np.L.var+')" title="'+esc('Cette photo : '+np.L.l+' — '+np.L.lab+', '+np.pts+' point'+(np.pts>1?'s':''))+'">'+np.L.l+' · '+np.pts+' pt'+(np.pts>1?'s':'')+'</span>':'';
+      return '<figure><a href="'+urlPhoto(id)+'" target="_blank" rel="noopener">'+note+'<img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg
+        +(ag?'<span class="fd-ag">👤 '+esc(ag.txt)+'</span>':'')+'</figcaption></figure>';
     }).join('');
     const parFlux={};
     l.obs.forEach(o=>{ const p=parFlux[o.flux]; if(!p||new Date(o.ts)>new Date(p.ts)) parFlux[o.flux]=o; });
