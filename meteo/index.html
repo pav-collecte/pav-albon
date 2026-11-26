@@ -663,7 +663,9 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
       +'<div class="scorebox">'
         +'<span class="bac">'+bacIcon(s.L?s.L.fill:0,s.L?'var('+s.L.var+')':'var(--sOff)',44)+'</span>'
         +'<span class="scoreside">'+scoreStrip(s.L)
-          +'<span class="scoretxt">'+(s.L?'<b>'+esc(s.L.lab)+'</b> · '+s.pts+' point'+(s.pts>1?'s':'')+' de pénalité':'<b>Non noté</b> · aucun relevé exploitable')+'</span>'
+          +'<span class="scoretxt">'+(s.L?'<b>'+esc(s.L.lab)+'</b> · '+s.pts+' point'+(s.pts>1?'s':'')+' de pénalité'
+            +(s.nPhotos>1?' · moyenne de '+s.nPhotos+' photos'+(s.plancherAgent>Math.round(s.ptsMoyen)?' (relevée par le signal de l\'agent)':''):'')
+            :'<b>Non noté</b> · aucun relevé exploitable')+'</span>'
         +'</span>'
       +'</div>'
       +preuve(s)

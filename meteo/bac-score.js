@@ -374,6 +374,10 @@ export function normaliser(donnees){
     agentPropre:!!o.propre||/^Signalé propre par l'agent/.test(String(o.texte||"")),
     /* Petits détritus épars seulement (repère posé par n8n en tête du texte). */
     detritus:/^Détritus épars seulement/.test(String(o.texte||"")),
+    /* Signaux de l'agent sur cette photo : champ agent (« plein », « sale »)
+       publié par n8n, ou repère en fin de texte. */
+    agentPlein:/plein/.test(String(o.agent||""))||/\[agent : plein\]/.test(String(o.texte||"")),
+    agentSale:/sale/.test(String(o.agent||""))||/\[agent : sale\]/.test(String(o.texte||"")),
     test:/^(test|cors)-/.test(String(o.uuid))
   }));
   /* Papier et carton : la même colonne « papier-cartonnette » est lue tantôt
@@ -508,9 +512,30 @@ export function calcule(REF,obs){
     const scs=s.flux.filter(f=>f.sc).map(f=>f.sc.total);
     s.pts=scs.length?pire(scs):null;
     s.L=s.pts===null?null:sous(s.flux.filter(f=>f.sc).map(f=>f.ts).sort().pop(),()=>lettre(s.pts));
+    /* La note de l'îlot est la moyenne des notes de ses photos du dernier jour
+       de relevé : celles que montrent les miniatures, chacune avec sa note. */
+    const mp=moyennePhotos(REF,obs,obs.filter(o=>o.site===s.site&&o.photo),true);
+    if(mp){ s.pts=mp.pts; s.L=sous(mp.ts,()=>lettre(mp.pts)); s.nPhotos=mp.n; s.ptsMoyen=mp.moy; s.plancherAgent=mp.plancher; }
     s.flux.sort((a,b)=>(ORDRE_FLUX[a.flux]??9)-(ORDRE_FLUX[b.flux]??9));
   });
   return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
+}
+
+/* Moyenne des notes des photos d'une liste de relevés (arrondie à l'entier,
+   comme la lettre). dernierJour : ne garder que le dernier jour de relevé. */
+const jourParis=t=>new Date(t).toLocaleDateString("sv-SE",{timeZone:"Europe/Paris"});
+function moyennePhotos(REF,obs,liste,dernierJour){
+  let l=liste.filter(o=>o.photo);
+  if(!l.length) return null;
+  if(dernierJour){ const j=l.map(o=>jourParis(o.ts)).sort().pop(); l=l.filter(o=>jourParis(o.ts)===j); }
+  const ids=[...new Set(l.map(o=>o.photo))];
+  const notes=ids.map(id=>{ const n=notePhoto(REF,obs,id); if(n) n.agent=l.some(o=>o.photo===id&&(o.agentPlein||o.agentSale)); return n; }).filter(Boolean);
+  if(!notes.length) return null;
+  const moy=notes.reduce((a,n)=>a+n.pts,0)/notes.length;
+  /* Un « Plein » ou un « Sale » de l'agent n'est pas noyé dans la moyenne :
+     la note d'une photo signalée par l'agent est un minimum. */
+  const plancher=Math.max(0,...notes.filter(n=>n.agent).map(n=>n.pts));
+  return {pts:Math.max(Math.round(moy),plancher),moy:Math.round(moy*10)/10,plancher,n:notes.length,ts:l.map(o=>o.ts).sort().pop()};
 }
 
 /* ── Note d'une photo seule ───────────────────────────────────────────────
@@ -567,7 +592,9 @@ export function passagesParSite(REF,obs){
         const total=c.pr+c.re+c.rc;
         if(pts===null||total>pts){pts=total; pire=o; crit=c;}
       });
-      lot.pts=pts; lot.L=pts===null?null:sous(pire.ts,()=>lettre(pts)); lot.bar=pire?versionDu(pire.ts):null; lot.depot=depot; lot.crit=crit;
+      const mpl=moyennePhotos(REF,obs,lot.obs,false);
+      if(mpl){ pts=mpl.pts; }
+      lot.pts=pts; lot.L=pts===null?null:sous((pire||lot.obs[lot.obs.length-1]).ts,()=>lettre(pts)); lot.bar=pire?versionDu(pire.ts):null; lot.depot=depot; lot.crit=crit;
       lot.photo=(pire||lot.obs[0]).photo;
     });
     sites[code].lots=lots;
