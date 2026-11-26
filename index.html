@@ -118,6 +118,7 @@ font-size: .78rem; font-weight: 600; min-height: 34px; }
 .bar-d { display: flex; align-items: center; gap: 10px; flex: none; }
 .bar-in { position: relative; }
 .mode-w { position: relative; display: inline-flex; }
+.ic-b { width: 24px; height: 24px; flex: none; }
 /* Bulle d'information sur le mode agent / admin : sous la bascule, en haut. */
 .mode-i { appearance: none; cursor: pointer; position: absolute; left: -9px; top: -7px; width: 20px; height: 20px; border-radius: 50%;
   border: 1.5px solid var(--surface); background: #2E6BD8; color: #fff; font: 700 .72rem/1 Georgia, serif; font-style: italic; padding: 0; }
@@ -553,7 +554,7 @@ et « Envoyer » juste dessous, sous le même pouce. */
 fois confirmés sur place par un agent. Masqué quand il n'y en a pas. -->
 <style>.nv-b{display:block;width:100%;padding:12px;border-radius:12px;border:2px dashed currentColor;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}.nv-i{margin:.5em 0 0;font-weight:600}</style>
 <div class="averif" id="nouv" hidden></div>
-<div id="lien-admin" hidden style="margin:12px 0"><a class="nv-b" href="admin.html" style="text-align:center;text-decoration:none;border-style:solid">Gérer les agents de la commune</a></div>
+<div id="lien-admin" hidden style="margin:12px 0"><a class="nv-b" href="admin.html" style="text-align:center;text-decoration:none;border-style:solid;display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15.8 14.6c2.3.1 4 1.6 4.6 4.4"/></svg>Gérer les agents de la commune</a></div>
 <div class="averif" id="averif" hidden>
 <div class="av-t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><path d="m9 10 2 2 4-4"/></svg><span id="averif-t"></span></div>
 <p class="av-s" id="averif-s"></p>
@@ -2434,7 +2435,7 @@ function rendreNouveau() {
   if (box.dataset.etat === etat) return;
   box.dataset.etat = etat;
   if (!NOUV.ouvert) {
-    box.innerHTML = `<button type="button" class="nv-b" data-nv="ouvrir">+ Nouveau point ici</button>`
+    box.innerHTML = `<button type="button" class="nv-b" data-nv="ouvrir" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg class="ic-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><path d="M9.6 8.3h4.8M10.2 8.3l.4 4.4h2.8l.4-4.4M11.2 7.2h1.6"/></svg>+ Nouveau point ici</button>`
       + (NOUV.info ? `<p class="nv-i">${esc(NOUV.info)}</p>` : `<p class="av-s">Initialisation : crée un point de collecte là où tu te trouves.</p>`);
     return;
   }
