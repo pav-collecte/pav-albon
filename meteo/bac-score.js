@@ -388,13 +388,36 @@ export function normaliser(donnees){
     const aRef=f=>REF.some(r=>r.site===o.site&&r.flux===f);
     if(SOEURS[o.flux]&&!aRef(o.flux)&&aRef(SOEURS[o.flux])) o.flux=SOEURS[o.flux];
   });
-  /* « Propre » signalé par l'agent : l'humain a vu l'îlot, son constat
-     l'emporte sur l'analyse des photos pour tout le passage (photos prises à
-     moins de la fenêtre de passage d'intervalle, avant ou après). */
+  /* Signaux de l'agent (« Propre », « Sale », « Plein ») : l'humain a vu
+     l'îlot, son constat l'emporte sur l'analyse des photos pendant tout le
+     passage (photos à moins de la fenêtre de passage, avant ou après).
+     Portée selon le cadrage de la photo signalée :
+     - vue d'ensemble (plusieurs flux visibles) : Propre / Sale portent sur
+       tout l'îlot ;
+     - photo d'un seul flux : le signal ne porte que sur ce flux.
+     « Plein » vise toujours le flux choisi par l'agent. */
   const fen=(FENETRE_PASSAGE||30*60000);
-  OBS.filter(o=>o.agentPropre).forEach(p=>{
-    const t=new Date(p.ts).getTime();
-    OBS.forEach(o=>{ if(o.site===p.site&&Math.abs(new Date(o.ts).getTime()-t)<=fen) Object.assign(o,{depotSol:false,sacs:0,pleines:0,bloquees:0,dessus:0,inaccessible:false,cause:"",agentPropre:true}); });
+  const cle=o=>o.uuid||o.photo||o.ts;
+  const lignesDe=k=>OBS.filter(o=>cle(o)===k);
+  const fluxVus=k=>{ const l=lignesDe(k), v=new Set(l.filter(o=>o.vues>0||o.inaccessible).map(o=>o.flux)); return v.size?v:new Set(l.map(o=>o.flux)); };
+  const duPassage=(src,fluxOk)=>{ const t=new Date(src.ts).getTime(); return OBS.filter(o=>o.site===src.site&&Math.abs(new Date(o.ts).getTime()-t)<=fen&&fluxOk(o.flux)); };
+  const sources=f=>{ const vu=new Set(); return OBS.filter(o=>f(o)&&!vu.has(cle(o))&&vu.add(cle(o))); };
+  // Plein : le flux choisi, sur tout le passage.
+  OBS.filter(o=>o.agentPlein).forEach(src=>{
+    src.agentPortee="flux";
+    duPassage(src,f=>f===src.flux).forEach(o=>{ if(o!==src){ o.pleines=Math.max(o.pleines,1); o.vues=Math.max(o.vues,1); o.pleinEtendu=true; } });
+  });
+  // Sale : dépôt sur l'îlot (vue d'ensemble) ou sur le flux de la photo.
+  sources(o=>o.agentSale).forEach(src=>{
+    const fx=fluxVus(cle(src)), global=fx.size>=2;
+    lignesDe(cle(src)).forEach(o=>{ o.agentPortee=global?"ilot":"flux"; });
+    duPassage(src,f=>global||fx.has(f)).forEach(o=>{ if(!o.depotSol){ o.depotSol=true; o.saleEtendu=true; } });
+  });
+  // Propre : en dernier, il l'emporte.
+  sources(o=>o.agentPropre).forEach(src=>{
+    const fx=fluxVus(cle(src)), global=fx.size>=2;
+    lignesDe(cle(src)).forEach(o=>{ o.agentPortee=global?"ilot":"flux"; o.agentPropreSource=true; });
+    duPassage(src,f=>global||fx.has(f)).forEach(o=>Object.assign(o,{depotSol:false,sacs:0,pleines:0,bloquees:0,dessus:0,inaccessible:false,cause:"",agentPropre:true,saleEtendu:false,pleinEtendu:false}));
   });
   return {REF,OBS,commune:donnees.commune||"",departement:donnees.departement||"",maj:donnees.maj||null};
 }

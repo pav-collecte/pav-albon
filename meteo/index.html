@@ -579,10 +579,13 @@ function rendu(){
      cartes, la visionneuse et le détail de la frise. */
   function agentPhoto(id,liste){
     const rows=liste.filter(o=>o.photo===id); if(!rows.length) return null;
-    if(rows.some(o=>/^Signalé propre par l'agent/.test(o.texte||""))) return {tag:"Propre",txt:"Signalé « Propre » par l'agent : son constat prime sur l'analyse de la photo."};
-    if(rows.some(o=>o.agentPropre)) return {tag:"Propre",txt:"Notée propre : l'agent a signalé l'îlot « Propre » pendant ce passage."};
+    const portee=rows.some(o=>o.agentPortee==="ilot")?" sur une vue d'ensemble : il porte sur tout l'îlot pendant ce passage":" sur une photo de ce seul flux : il ne porte que sur ce flux";
+    if(rows.some(o=>o.agentPropreSource)) return {tag:"Propre",txt:"Signalé « Propre » par l'agent"+portee+". Son constat prime sur l'analyse des photos."};
+    if(rows.some(o=>o.agentPropre)) return {tag:"Propre",txt:"Notée propre : l'agent a signalé « Propre » pendant ce passage."};
     const s=[rows.some(o=>o.agentPlein)?"Plein":"",rows.some(o=>o.agentSale)?"Sale":""].filter(Boolean);
-    if(s.length) return {tag:s.join(", "),txt:"Signalé « "+s.join(" » et « ")+" » par l'agent : la note de cette photo est un minimum pour l'îlot."};
+    if(s.length) return {tag:s.join(", "),txt:"Signalé « "+s.join(" » et « ")+" » par l'agent"+(rows.some(o=>o.agentSale)?portee:"")+". La note de cette photo est un minimum pour l'îlot."};
+    const e=[rows.some(o=>o.pleinEtendu)?"plein":"",rows.some(o=>o.saleEtendu)?"sale":""].filter(Boolean);
+    if(e.length) return {tag:e.map(x=>x[0].toUpperCase()+x.slice(1)).join(", "),txt:"Notée "+e.join(" et ")+" : l'agent l'a signalé pendant ce passage."};
     return null;
   }
   function pastilleAgent(a){ return a?'<span class="pj-ag" title="'+esc(a.txt)+'">👤 '+esc(a.tag)+'</span>':''; }
