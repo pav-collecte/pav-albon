@@ -33,7 +33,7 @@ self.addEventListener("fetch", e => {
   const r = e.request;
   if (r.method !== "GET" || new URL(r.url).origin !== self.location.origin) return;
   e.respondWith(
-    fetch(r)
+    fetch(r.mode === "navigate" ? r.url : r, { cache: "no-cache" })
       .then(rep => {
         const copie = rep.clone();
         caches.open(CACHE).then(c => c.put(r, copie)).catch(() => {});
