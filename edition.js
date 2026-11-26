@@ -133,9 +133,55 @@ try { var a = JSON.parse(lire("pav-admin") || "null"); return !!(a && a.admin &&
     var f = fenetre('<h3>Modifier l\'îlot</h3><p class="sous">' + esc(c) + ' · chargement…</p>');
     chargerPoints().catch(function () {}).then(function () {
       var p = POINTS[c];
+      if (!p) { var loc = null; try { loc = SITES.find(function (s) { return s.code === c; }); } catch (e) {}
+        if (loc) { pointLocal(f, loc); return; } }
       if (!p) { f.querySelector(".pav-ed").innerHTML = '<h3>Îlot ' + esc(c) + '</h3><p class="sous">Introuvable dans le référentiel publié.</p><div class="act"><button type="button" class="non">Fermer</button></div>'; f.querySelector(".non").onclick = function () { f.remove(); }; return; }
       formulaire(f, p);
     });
+  }
+
+  /* Point présent sur ce téléphone mais pas encore dans le référentiel publié :
+     créé ou validé ici il y a peu, ou souvenir local d'un point qui n'existe
+     plus. On peut le retirer : le serveur le sort de la tournée s'il le
+     connaît, et dans tous les cas le téléphone l'oublie. */
+  function oublierLocal(code) {
+    try { var i = SITES.findIndex(function (s) { return s.code === code; }); if (i >= 0) SITES.splice(i, 1); } catch (e) {}
+    try { if (VALIDES[code]) { delete VALIDES[code]; sauverValides(); } } catch (e) {}
+    try { var rf = JSON.parse(lire("pav-referentiel") || "null"); if (Array.isArray(rf)) ecrire("pav-referentiel", JSON.stringify(rf.filter(function (x) { return x && x.code !== code; }))); } catch (e) {}
+    try { var v = JSON.parse(lire("pav-valides") || "{}"); if (v[code]) { delete v[code]; ecrire("pav-valides", JSON.stringify(v)); } } catch (e) {}
+    try { if (typeof rendre === "function") rendre(); } catch (e) {}
+  }
+  function pointLocal(f, s) {
+    var box = f.querySelector(".pav-ed"), conf = false;
+    function dessiner(msg, cl) {
+      box.innerHTML = '<h3>' + esc(s.nom) + '</h3><p class="sous">' + esc(s.code) + ' · pas encore publié</p>'
+        + '<p>Ce point n\'existe que sur ce téléphone pour l\'instant : il n\'apparaît pas encore dans le référentiel publié (mise à jour toutes les 15 min). Tu ne peux pas le modifier, mais tu peux le retirer.</p>'
+        + '<div class="retrait">' + (conf
+          ? '<p>Retirer <b>' + esc(s.code) + ' — ' + esc(s.nom) + '</b> ? Il sera sorti de la tournée s\'il a été enregistré, et oublié par ce téléphone.</p>'
+            + '<div class="act" style="margin-top:0"><button type="button" class="non" data-r="non">Garder le point</button><button type="button" class="conf" data-r="oui">Oui, retirer</button></div>'
+          : '<button type="button" data-r="ask">Retirer ce point (non valide)</button>') + '</div>'
+        + '<div class="msg' + (cl ? " " + cl : "") + '" aria-live="polite">' + esc(msg || "") + '</div>'
+        + '<div class="act"><button type="button" class="non" data-r="fermer">Fermer</button></div>';
+      box.querySelectorAll("[data-r]").forEach(function (b) { b.onclick = function () {
+        if (ENVOI) return;
+        var r = b.dataset.r;
+        if (r === "fermer") { f.remove(); return; }
+        if (r === "ask" || r === "non") { conf = r === "ask"; dessiner(); return; }
+        ENVOI = true; box.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+        appeler("retirer", { site_code: s.code }).then(function () { return "retiré de la tournée"; }, function (er) {
+          var m = String(er && er.message || "");
+          if (/introuvable|déjà retiré/i.test(m)) return "inconnu du serveur : oublié par ce téléphone";
+          throw er;
+        }).then(function (quoi) {
+          oublierLocal(s.code);
+          box.innerHTML = '<h3>Point ' + esc(s.code) + ' retiré</h3><p class="sous">' + esc(s.nom) + ' — ' + esc(quoi) + '</p>'
+            + '<div class="act"><button type="button" class="ok">Fermer</button></div>';
+          box.querySelector(".ok").onclick = function () { f.remove(); };
+        }).catch(function (er) { conf = true; dessiner(er.message || "Retrait impossible.", "err"); })
+          .then(function () { ENVOI = false; });
+      }; });
+    }
+    dessiner();
   }
 
   function formulaire(f, p) {
@@ -199,7 +245,7 @@ try { var a = JSON.parse(lire("pav-admin") || "null"); return !!(a && a.admin &&
       box.querySelectorAll("button").forEach(function (b) { b.disabled = true; });
       dire("Retrait en cours…");
       appeler("retirer", { site_code: p.code }).then(function () {
-        try { var i = SITES.findIndex(function (s) { return s.code === p.code; }); if (i >= 0) { SITES.splice(i, 1); if (typeof rendre === "function") rendre(); } } catch (e) {}
+        oublierLocal(p.code);
         box.innerHTML = '<h3>Point ' + esc(p.code) + ' retiré</h3><p class="sous">' + esc(p.nom) + '</p>'
           + '<p>Il n\'apparaît plus sur ce téléphone. La météo et les autres téléphones suivront à la prochaine publication (15 min au plus).</p>'
           + '<div class="act"><button type="button" class="ok">Fermer</button></div>';
