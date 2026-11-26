@@ -363,8 +363,26 @@ export function normaliser(donnees){
        ils interdisent seulement de publier la photo. Absents du fichier (ancienne
        version des données), ils valent faux. */
     personneVisible:!!o.personneVisible, plaqueLisible:!!o.plaqueLisible,
+    /* Signal « Propre » de l'agent (posé par n8n en tête du texte, ou champ propre). */
+    agentPropre:!!o.propre||/^Signalé propre par l'agent/.test(String(o.texte||"")),
     test:/^(test|cors)-/.test(String(o.uuid))
   }));
+  /* Papier et carton : la même colonne « papier-cartonnette » est lue tantôt
+     papier, tantôt carton. Si l'îlot n'a que l'un des deux au référentiel, un
+     relevé de l'autre est rangé sur celui qui existe. */
+  const SOEURS={papier:"carton",carton:"papier"};
+  OBS.forEach(o=>{
+    const aRef=f=>REF.some(r=>r.site===o.site&&r.flux===f);
+    if(SOEURS[o.flux]&&!aRef(o.flux)&&aRef(SOEURS[o.flux])) o.flux=SOEURS[o.flux];
+  });
+  /* « Propre » signalé par l'agent : l'humain a vu l'îlot, son constat
+     l'emporte sur l'analyse des photos pour tout le passage (photos prises à
+     moins de la fenêtre de passage d'intervalle, avant ou après). */
+  const fen=(FENETRE_PASSAGE||30*60000);
+  OBS.filter(o=>o.agentPropre).forEach(p=>{
+    const t=new Date(p.ts).getTime();
+    OBS.forEach(o=>{ if(o.site===p.site&&Math.abs(new Date(o.ts).getTime()-t)<=fen) Object.assign(o,{depotSol:false,sacs:0,pleines:0,bloquees:0,dessus:0,inaccessible:false,cause:"",agentPropre:true}); });
+  });
   return {REF,OBS,commune:donnees.commune||"",departement:donnees.departement||"",maj:donnees.maj||null};
 }
 
@@ -412,7 +430,7 @@ export function fusionPassage(liste){
   const pire=tri.slice().sort((a,b)=>(b.sacs-a.sacs)||((b.depotSol?1:0)-(a.depotSol?1:0)))[0];
   if(f.depotSol&&!tri[0].depotSol){ f.cause=pire.cause||f.cause; }
   f.confiance=Math.max(...tri.filter(o=>o.depotSol===f.depotSol).map(o=>o.confiance));
-  f.nPhotos=tri.length;
+  f.nPhotos=tri.length; f.agentPropre=tri.some(o=>o.agentPropre);
   return f;
 }
 /* Les photos d'un flux qui appartiennent au même passage que le relevé o :
@@ -462,6 +480,7 @@ export function calcule(REF,obs){
     bouts.push(rm.txt);
     if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
     if(o.nPhotos>1) bouts.push(o.nPhotos+" photos de ce passage");
+    if(o.agentPropre) bouts.push("signalé propre par l'agent");
     if(nRecid>1) bouts.push(nRecid+" passages avec dépôt sur "+B.recidive.fenetreJours+" j"+(sc.rc===0&&!o.depotSol&&B.recidive.seulementSiDepot?" (sans pénalité : rien au sol aujourd'hui)":""));
     B=b0; LCOUR=l0; FENETRE_PASSAGE=f0;
     parSite[site].flux.push({flux,niveau,horsRef,sc,bar:infoVersion(h0),detail:bouts.join(" · "),ts:o.ts,test:o.test,
