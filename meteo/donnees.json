@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-26T12:16:01Z",
+ "maj": "2026-11-26T18:46:02Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -194,6 +194,22 @@
    "lat": 45.2601,
    "lon": 4.824026,
    "flux": "carton",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-08",
+   "nom": "Test point local",
+   "lat": 45.244467,
+   "lon": 4.844277,
+   "flux": "verre",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-08",
+   "nom": "Test point local",
+   "lat": 45.244467,
+   "lon": 4.844277,
+   "flux": "ordures_menageres",
    "nbUnites": 1
   }
  ],
