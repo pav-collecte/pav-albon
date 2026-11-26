@@ -559,7 +559,10 @@ function rendu(){
   (function(){
     const box=document.getElementById('alertes-commune'); if(!box) return;
     const tri=c=>'<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="flex:none"><path d="M12 2.5 1.5 21h21L12 2.5z" fill="'+c+'"/><path d="M12 9.5v5M12 17.6v.2" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>';
-    const noirs=sites.filter(s=>s.L&&(s.L.l==='D'||s.L.l==='E'));
+    /* Point noir : seulement si le relevé qui l'a noté D ou E date d'aujourd'hui.
+       Sans nouveau relevé, l'alerte tombe le lendemain (la carte de l'îlot garde sa note). */
+    const auj=new Date().toDateString();
+    const noirs=sites.filter(s=>s.L&&(s.L.l==='D'||s.L.l==='E')&&s.dernier&&new Date(s.dernier).toDateString()===auj);
     const retard=sites.filter(s=>!s.dernier||jours(s.dernier)>JOURS_ALERTE).sort((a,b)=>(a.dernier||'').localeCompare(b.dernier||''));
     let h='';
     if(noirs.length) h+='<div class="al rouge" role="alert">'+tri('#B3261E')+'<div><b>'+noirs.length+' point'+(noirs.length>1?'s':'')+' noir'+(noirs.length>1?'s':'')+' (Bac-Score D ou E)</b><br>'
