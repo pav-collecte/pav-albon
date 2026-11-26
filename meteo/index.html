@@ -127,7 +127,12 @@ section{margin-top:40px}
 /* Frise des passages : une bande par îlot, un carré par passage. */
 .frise{display:grid;gap:16px}
 .bac{display:inline-flex;flex-direction:column;align-items:center;gap:1px}.bac-pct{font:600 .7rem var(--mono);color:var(--ink-2)}
-.legende{margin:-4px 0 14px;padding:10px 12px;border-radius:10px;background:var(--bg-2,#f4f1ea);font-size:.8rem;line-height:1.5;color:var(--ink-2)}
+.legende{margin:-6px 0 12px;font-size:.8rem;line-height:1.45;color:var(--ink-2)}
+.legende summary{display:inline-flex;align-items:center;gap:4px;cursor:pointer;list-style:none;padding:4px 10px;border-radius:999px;border:1px solid var(--line,#ddd);font-weight:600;font-size:.78rem;color:var(--ink-2)}
+.legende summary::-webkit-details-marker{display:none}
+.legende[open] summary{margin-bottom:6px}
+.legende ul{margin:0;padding:8px 12px 8px 26px;border-radius:10px;background:var(--bg-2,#f4f1ea)}
+.legende li{margin:1px 0}
 .frow2{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:start}
 @media (max-width:560px){.frow2{grid-template-columns:1fr;gap:6px}}
 .fr-code{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);letter-spacing:.04em}
@@ -358,9 +363,15 @@ details[open] summary{margin-bottom:8px}
     <h2>État des îlots</h2>
     <p>Cliquez le détail d'un îlot pour voir le raisonnement flux par flux.</p>
   </div>
-  <p class="legende"><b>☀️ La météo</b> (soleil, éclaircies, pluie, orage) : l'état du jour, c'est-à-dire le plus mauvais constat parmi la propreté au sol et le remplissage.
-    <br><b>🗑 La poubelle</b> : la jauge de remplissage du site, c'est-à-dire la part de conteneurs pleins ou bloqués, tous flux confondus. Le couvercle s'entrouvre aux deux tiers et déborde quand tout est plein. La lettre à côté est le Bac-Score (propreté, remplissage, récidive).
-    <br><b>Conteneurs non photographiés</b> : rien ne dit qu'ils sont pleins, ils comptent comme disponibles (c'est indiqué dans le détail de chaque flux).</p>
+  <details class="legende">
+    <summary>ⓘ Lire les icônes</summary>
+    <ul>
+      <li><b>☀️ Météo</b> : l'état du jour (propreté au sol et remplissage, le pire des deux).</li>
+      <li><b>🗑 Poubelle</b> : remplissage du site ; le couvercle déborde quand tout est plein.</li>
+      <li><b>Lettre</b> : le Bac-Score (A à E).</li>
+      <li>Un conteneur non photographié compte comme disponible.</li>
+    </ul>
+  </details>
   <div class="grid" id="sites"></div>
 </section>
 
