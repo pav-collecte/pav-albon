@@ -126,6 +126,7 @@ section{margin-top:40px}
 
 /* Frise des passages : une bande par îlot, un carré par passage. */
 .frise{display:grid;gap:16px}
+.legende{margin:-4px 0 14px;padding:10px 12px;border-radius:10px;background:var(--bg-2,#f4f1ea);font-size:.8rem;line-height:1.5;color:var(--ink-2)}
 .frow2{display:grid;grid-template-columns:170px 1fr;gap:14px;align-items:start}
 @media (max-width:560px){.frow2{grid-template-columns:1fr;gap:6px}}
 .fr-code{font-family:var(--mono);font-size:.7rem;color:var(--ink-3);letter-spacing:.04em}
@@ -352,6 +353,9 @@ details[open] summary{margin-bottom:8px}
     <h2>État des îlots</h2>
     <p>Cliquez le détail d'un îlot pour voir le raisonnement flux par flux.</p>
   </div>
+  <p class="legende"><b>☀️ La météo</b> (soleil, éclaircies, pluie, orage) : l'état du jour, c'est-à-dire le plus mauvais constat parmi la propreté au sol et le remplissage.
+    <br><b>🗑 La poubelle</b> : le Bac-Score, note globale de A à E (propreté, remplissage, récidive). Plus elle est remplie, plus la note est mauvaise : ce n'est pas le taux de remplissage des conteneurs.
+    <br><b>Conteneurs non photographiés</b> : rien ne dit qu'ils sont pleins, ils comptent comme disponibles (c'est indiqué dans le détail de chaque flux).</p>
   <div class="grid" id="sites"></div>
 </section>
 
@@ -671,7 +675,7 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
     const vieux = s.dernier && jours(s.dernier)>7;
     return '<article class="site">'
       +'<div class="site-top">'
-        +'<div class="wx '+niv.cls+'">'+icon(niv.wx,26)+'</div>'
+        +'<div class="wx '+niv.cls+'" title="'+esc('Météo du jour : '+niv.lab+' (le plus mauvais constat parmi propreté et remplissage)')+'">'+icon(niv.wx,26)+'</div>'
         +'<div style="min-width:0;flex:1">'
           +'<div class="site-code">'+esc(s.site)+'</div>'
           +'<div class="site-name">'+esc(s.nom)+'</div>'
@@ -680,7 +684,7 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
         +'<span class="pill '+niv.cls+'">'+niv.lab+'</span>'
       +'</div>'
       +'<div class="scorebox">'
-        +'<span class="bac">'+bacIcon(s.L?s.L.fill:0,s.L?'var('+s.L.var+')':'var(--sOff)',44)+'</span>'
+        +'<span class="bac" title="'+esc(s.L?'Bac-Score '+s.L.l+' : note globale (propreté, remplissage, récidive), pas le taux de remplissage':'Pas de note')+'">'+bacIcon(s.L?s.L.fill:0,s.L?'var('+s.L.var+')':'var(--sOff)',44)+'</span>'
         +'<span class="scoreside">'+scoreStrip(s.L)
           +'<span class="scoretxt">'+(s.L?'<b>'+esc(s.L.lab)+'</b> · '+s.pts+' point'+(s.pts>1?'s':'')+' de pénalité'
             +(s.nPhotos>1?' · moyenne de '+s.nPhotos+' photos'+(s.plancherAgent>Math.round(s.ptsMoyen)?' (relevée par le signal de l\'agent)':''):'')

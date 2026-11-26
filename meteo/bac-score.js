@@ -424,7 +424,12 @@ export function niveauRemplissage(o,ref){
   if(!ref.n) return {n:null,txt:"nombre de conteneurs inconnu"};
   const occupe=o.bloquees+o.pleines;
   const n = Math.min(3, indexPalier(B.remplissage.paliers, taux(o,ref)));
-  return {n,txt:occupe+" sur "+ref.n+" conteneur"+(ref.n>1?"s":"")+" plein ou bloqué"+(occupe>1?"s":"")+(ref.provisoire?" (effectif provisoire)":"")};
+  /* Conteneurs du poste absents des photos : rien ne dit qu'ils sont pleins,
+     ils comptent comme disponibles. On le dit, pour ne pas laisser croire
+     qu'on les a vus. */
+  const nonVus=Math.max(0,ref.n-o.vues);
+  return {n,txt:occupe+" sur "+ref.n+" conteneur"+(ref.n>1?"s":"")+" plein ou bloqué"+(occupe>1?"s":"")+(ref.provisoire?" (effectif provisoire)":"")
+    +(nonVus&&!ref.provisoire?" · "+nonVus+" non photographié"+(nonVus>1?"s":"")+", compté"+(nonVus>1?"s":"")+" disponible"+(nonVus>1?"s":""):"")};
 }
 
 /* ── Un passage = toutes ses photos ────────────────────────────────────────
