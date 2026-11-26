@@ -434,7 +434,11 @@ details[open] summary{margin-bottom:8px}
    depuis le classeur, et importe le calcul du Bac-Score. Une seule
    implémentation du barème, partagée avec la vignette. */
 import {LETTRES, FLUX_LABEL, dateFR, jours, normaliser, appliquerBareme, decrireBareme,
-        calcule as calculeAvec, passagesParSite as passagesAvec, notePhoto as notePhotoAvec} from './bac-score.js';
+        calcule as calculeAvec, passagesParSite as passagesAvec} from './bac-score.js';
+/* Fonctions récentes importées sans exigence : une page à jour avec un calcul
+   encore en cache (ancienne version) doit s'afficher quand même. */
+import * as BS from './bac-score.js';
+const notePhotoAvec=(R,o,id)=>typeof BS.notePhoto==='function'?BS.notePhoto(R,o,id):null;
 import {chargerConfig, chargerBareme, urlPhoto, urlVignette, libelleCommune} from './config.js';
 
 let REF=[], OBS=[];
