@@ -513,6 +513,26 @@ export function calcule(REF,obs){
   return Object.values(parSite).sort((a,b)=>a.site.localeCompare(b.site));
 }
 
+/* ── Note d'une photo seule ───────────────────────────────────────────────
+   Les miniatures montrent la note de CHAQUE photo (ce qu'elle montre à elle
+   seule), à côté de celle du passage. Même barème que le relevé : version en
+   vigueur ce jour-là, flux remontés à la photo comme à l'îlot (max ou moyenne). */
+export function notePhoto(REF,obs,photoId){
+  const lignes=obs.filter(o=>o.photo===photoId); if(!lignes.length) return null;
+  return sous(lignes[0].ts,()=>{
+    const scores=lignes.filter(o=>!(o.vues===0&&!o.inaccessible)).map(o=>{
+      const ref=unitesRef(REF,o.site,o.flux,obs);
+      const n=nPassagesAvecDepot(o.site,o.flux,new Date(o.ts).getTime(),obs);
+      const sc={flux:o.flux,pr:ptsProprete(o.sacs,o.depotSol,o.detritus),re:ptsRemplissage(o,ref),rc:ptsRecidiveReleve(o,n)};
+      sc.total=sc.pr+sc.re+sc.rc; return sc;
+    });
+    if(!scores.length) return null;
+    const v=scores.map(x=>x.total);
+    const pts=B.agregation.ilot==="moyenne"?Math.round(v.reduce((a,b)=>a+b,0)/v.length):Math.max(...v);
+    return {pts,L:lettre(pts),flux:scores};
+  });
+}
+
 /* ── Historique : un carré par passage ────────────────────────────────────
    Un « passage » regroupe les photos prises au même endroit à quelques
    minutes d'intervalle. Sa note est celle du flux le plus dégradé, calculée
