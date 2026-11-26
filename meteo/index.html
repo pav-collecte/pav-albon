@@ -156,6 +156,7 @@ button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;c
 .pj-zoom .pj-ag{position:static}
 .fd-ph figure a{position:relative;display:block}
 .fd-pn{position:absolute;top:6px;left:6px;padding:2px 7px;border-radius:6px;color:#fff;font:700 .8rem var(--mono);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.fr-sq{position:relative}.fr-ag{position:absolute;right:-6px;top:-7px;font-size:.7rem;line-height:1;background:#fff;border-radius:999px;padding:1px;box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .fd-ag{display:block;margin-top:3px;color:#8a5a00;font-size:.74rem}
 .pj-pts{position:absolute;right:3px;bottom:3px;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.62);color:#fff;font:600 .68rem var(--mono)}
 .pj-zoom .pj-pts{position:static;background:rgba(255,255,255,.18);margin-left:4px;vertical-align:middle}
@@ -764,7 +765,7 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
       if(rows.some(o=>o.personneVisible||o.plaqueLisible))
         return '<figure><div class="fd-np">Photo non publiée : une personne ou une plaque y est reconnaissable.</div><figcaption>'+leg+'</figcaption></figure>';
       const np=notePhotoAvec(REF,obs,id), ag=agentPhoto(id,obs);
-      const note=np?'<span class="fd-pn" style="background:var('+np.L.var+')" title="'+esc('Cette photo : '+np.L.l+' — '+np.L.lab+', '+np.pts+' point'+(np.pts>1?'s':''))+'">'+np.L.l+' · '+np.pts+' pt'+(np.pts>1?'s':'')+'</span>':'';
+      const note=np?'<span class="fd-pn" style="background:var('+np.L.var+')" title="'+esc('Cette photo : '+np.L.l+' — '+np.L.lab+', '+np.pts+' point'+(np.pts>1?'s':''))+'">'+np.L.l+(ag?' 👤':'')+' · '+np.pts+' pt'+(np.pts>1?'s':'')+'</span>':'';
       return '<figure><a href="'+urlPhoto(id)+'" target="_blank" rel="noopener">'+note+'<img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg
         +(ag?'<span class="fd-ag">👤 '+esc(ag.txt)+'</span>':'')+'</figcaption></figure>';
     }).join('');
@@ -785,7 +786,8 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
         +(o.texte?'<span class="fd-tx">'+esc(o.texte)+'</span>':'')+'</li>';
     }).join('');
     const titre=(l.L?'Bac-Score '+l.L.l+' — '+l.L.lab+' · '+l.pts+' point'+(l.pts>1?'s':''):'Non noté')+' · '+dateFR(l.fin)+(l.bar&&l.bar.nom?' · barème « '+l.bar.nom+' »':'');
-    return '<div class="fd-t"><span class="fd-l" style="background:'+col+'">'+(l.L?l.L.l:'?')+'</span><span>'+esc(titre)+'</span></div>'
+    const agD=ids.some(id=>agentPhoto(id,l.obs));
+    return '<div class="fd-t"><span class="fd-l" style="background:'+col+'">'+(l.L?l.L.l:'?')+(agD?' 👤':'')+'</span><span>'+esc(titre)+(agD?' · signal de l\'agent':'')+'</span></div>'
       +(photos?'<div class="fd-ph">'+photos+'</div>':'<p class="fd-v">Pas de photo pour ce passage.</p>')
       +'<ul class="fd-f">'+constats+'</ul>';
   }
@@ -796,9 +798,11 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
       const col=l.L?'var('+l.L.var+')':'var(--sOff)';
       const jj=new Date(l.fin).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
       const titre=(l.L?'Bac-Score '+l.L.l+' — '+l.L.lab+' · '+l.pts+' point'+(l.pts>1?'s':'')
-                     :'Non noté')+' · '+dateFR(l.fin)+(l.depot?' · dépôt au sol':'');
+                     :'Non noté')+' · '+dateFR(l.fin)+(l.depot?' · dépôt au sol':'')
+                     +([...new Set(l.obs.map(o=>o.photo).filter(Boolean))].some(id=>agentPhoto(id,l.obs))?' · signal de l\'agent':'');
+      const agL=[...new Set(l.obs.map(o=>o.photo).filter(Boolean))].map(id=>agentPhoto(id,l.obs)).filter(Boolean);
       const inner='<span class="fr-sq'+(l.depot?' depot':'')+'" style="background:'+col+'">'
-        +(l.L?l.L.l:'?')+'</span><span class="fr-dt">'+jj+'</span>';
+        +(l.L?l.L.l:'?')+(agL.length?'<span class="fr-ag" title="'+esc('Signal de l\'agent : '+[...new Set(agL.map(a=>a.tag))].join(', '))+'">👤</span>':'')+'</span><span class="fr-dt">'+jj+'</span>';
       return l.photo
         ? '<button type="button" class="fr-cell" data-site="'+esc(s.site)+'" data-i="'+i+'" aria-expanded="false" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</button>'
         : '<button type="button" class="fr-cell" data-site="'+esc(s.site)+'" data-i="'+i+'" aria-expanded="false" title="'+esc(titre)+'" aria-label="'+esc(titre)+'">'+inner+'</button>';
