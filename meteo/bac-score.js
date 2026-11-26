@@ -39,6 +39,9 @@ export const BAREME_DEFAUT = {
     /* Un dépôt constaté sans sac dénombrable (cartons, encombrants) : on ne
        peut pas le classer à zéro, il prend le premier palier non nul. */
     depotSansSac: 2,
+    /* Petits détritus épars seulement (mouchoir, papier, emballage isolé) :
+       moins qu'un dépôt, mais pas rien. */
+    detritus: 1,
   },
   /* Part des conteneurs pleins ou bloqués, de 0 à 1. */
   remplissage: {
@@ -132,6 +135,7 @@ export function normaliserBareme(brut) {
       libelle: String((b.proprete && b.proprete.libelle) || D.proprete.libelle),
       paliers: paliersValides(b.proprete && b.proprete.paliers, D.proprete.paliers, problemes, "propreté"),
       depotSansSac: positif(b.proprete && b.proprete.depotSansSac, D.proprete.depotSansSac),
+      detritus: positif(b.proprete && b.proprete.detritus, D.proprete.detritus),
     },
     remplissage: {
       libelle: String((b.remplissage && b.remplissage.libelle) || D.remplissage.libelle),
@@ -240,8 +244,9 @@ export const ORDRE_FLUX={verre:0,ordures_menageres:1,emballages:2,papier:3,carto
 /* ── Les trois critères, lus dans le barème actif ─────────────────────── */
 export function lettre(pts){ return LCOUR.find(x=>pts<=x.max) || LCOUR[LCOUR.length-1]; }
 
-export function ptsProprete(sacs,depot){
+export function ptsProprete(sacs,depot,detritus){
   if(!depot && sacs===0) return B.proprete.paliers[0].points;
+  if(detritus && sacs===0) return B.proprete.detritus;
   /* Dépôt constaté sans sac dénombrable : un carton, un encombrant. Zéro
      serait faux, et le compter comme un sac serait arbitraire. */
   if(sacs===0) return B.proprete.depotSansSac;
@@ -266,6 +271,7 @@ export function nPassagesAvecDepot(site,flux,tFin,obs){
   const fenetre=B.recidive.fenetreJours*86400000;
   const liste=obs.filter(x=>x.site===site&&x.flux===flux&&x.depotSol
     &&!(x.confiance<B.recidive.confianceMin)
+    &&!x.detritus
     &&new Date(x.ts).getTime()<=tFin
     &&new Date(x.ts).getTime()>=tFin-fenetre)
     .sort((a,b)=>new Date(a.ts)-new Date(b.ts));
@@ -308,7 +314,8 @@ export function decrireBareme(){
   const critere=(cle,conf,items)=>({cle,libelle:conf.libelle,items,
     max:Math.max(...items.map(i=>i.points))});
   const criteres=[
-    critere("pr",B.proprete,B.proprete.paliers.map((p,i)=>({texte:txtPr[i],points:p.points}))),
+    critere("pr",B.proprete,B.proprete.paliers.map((p,i)=>({texte:txtPr[i],points:p.points}))
+      .concat(B.proprete.detritus!==B.proprete.paliers[0].points?[{texte:"petits détritus épars seulement",points:B.proprete.detritus}]:[])),
     critere("re",B.remplissage,itemsRe),
     critere("rc",{libelle:B.recidive.libelle+" sur "+B.recidive.fenetreJours+" jours"},
             B.recidive.paliers.map((p,i)=>({texte:txtRc[i],points:p.points}))),
@@ -365,6 +372,8 @@ export function normaliser(donnees){
     personneVisible:!!o.personneVisible, plaqueLisible:!!o.plaqueLisible,
     /* Signal « Propre » de l'agent (posé par n8n en tête du texte, ou champ propre). */
     agentPropre:!!o.propre||/^Signalé propre par l'agent/.test(String(o.texte||"")),
+    /* Petits détritus épars seulement (repère posé par n8n en tête du texte). */
+    detritus:/^Détritus épars seulement/.test(String(o.texte||"")),
     test:/^(test|cors)-/.test(String(o.uuid))
   }));
   /* Papier et carton : la même colonne « papier-cartonnette » est lue tantôt
@@ -403,7 +412,7 @@ const rangDepuisPoints=(paliers,pts)=>{
   return Math.min(3, i<0?paliers.length-1:i);
 };
 export function niveauProprete(o){
-  return rangDepuisPoints(B.proprete.paliers, ptsProprete(o.sacs,o.depotSol));
+  return rangDepuisPoints(B.proprete.paliers, ptsProprete(o.sacs,o.depotSol,o.detritus));
 }
 export function niveauRemplissage(o,ref){
   if(o.inaccessible) return {n:rangDepuisPoints(B.remplissage.paliers,B.remplissage.inaccessible),txt:"accès bloqué"};
@@ -431,6 +440,7 @@ export function fusionPassage(liste){
   if(f.depotSol&&!tri[0].depotSol){ f.cause=pire.cause||f.cause; }
   f.confiance=Math.max(...tri.filter(o=>o.depotSol===f.depotSol).map(o=>o.confiance));
   f.nPhotos=tri.length; f.agentPropre=tri.some(o=>o.agentPropre);
+  f.detritus=f.depotSol&&f.sacs===0&&tri.filter(o=>o.depotSol).every(o=>o.detritus);
   return f;
 }
 /* Les photos d'un flux qui appartiennent au même passage que le relevé o :
@@ -473,10 +483,10 @@ export function calcule(REF,obs){
     const p=niveauProprete(o), rm=niveauRemplissage(o,ref);
     const niveau=Math.max(p, rm.n==null?0:rm.n);
     const nRecid=nPassagesAvecDepot(site,flux,new Date(o.ts).getTime(),obs);
-    const sc={pr:ptsProprete(o.sacs,o.depotSol),re:ptsRemplissage(o,ref),rc:ptsRecidiveReleve(o,nRecid),nRecid};
+    const sc={pr:ptsProprete(o.sacs,o.depotSol,o.detritus),re:ptsRemplissage(o,ref),rc:ptsRecidiveReleve(o,nRecid),nRecid};
     sc.total=sc.pr+sc.re+sc.rc; sc.L=lettre(sc.total);
     const bouts=[];
-    bouts.push(o.sacs>0?o.sacs+" sac"+(o.sacs>1?"s":"")+" au sol":o.depotSol?"dépôt au sol":"rien au sol");
+    bouts.push(o.sacs>0?o.sacs+" sac"+(o.sacs>1?"s":"")+" au sol":o.depotSol?(o.detritus?"petits détritus épars":"dépôt au sol"):"rien au sol");
     bouts.push(rm.txt);
     if(o.cause) bouts.push((CAUSE_LABEL[o.cause]||o.cause).toLowerCase());
     if(o.nPhotos>1) bouts.push(o.nPhotos+" photos de ce passage");
@@ -533,7 +543,7 @@ export function passagesParSite(REF,obs){
         const ref=unitesRef(REF,o.site,o.flux,obs);
         
         // Détail par critère (pr, re, rc) gardé pour les statistiques de la page détaillée.
-        const c=sous(o.ts,()=>({pr:ptsProprete(o.sacs,o.depotSol),re:ptsRemplissage(o,ref),rc:ptsRecidiveReleve(o,nPassagesAvecDepot(o.site,o.flux,new Date(o.ts).getTime(),obs))}));
+        const c=sous(o.ts,()=>({pr:ptsProprete(o.sacs,o.depotSol,o.detritus),re:ptsRemplissage(o,ref),rc:ptsRecidiveReleve(o,nPassagesAvecDepot(o.site,o.flux,new Date(o.ts).getTime(),obs))}));
         const total=c.pr+c.re+c.rc;
         if(pts===null||total>pts){pts=total; pire=o; crit=c;}
       });
