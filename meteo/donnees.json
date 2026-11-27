@@ -1,7 +1,7 @@
 {
  "commune": "Albon",
  "departement": "26",
- "maj": "2026-11-27T17:01:01Z",
+ "maj": "2026-11-27T20:01:01Z",
  "source": "classeur des relevés de Albon",
  "referentiel": [
   {
@@ -194,6 +194,54 @@
    "lat": 45.2601,
    "lon": 4.824026,
    "flux": "carton",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "verre",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "ordures_menageres",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "emballages",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "carton",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "papier",
+   "nbUnites": 1
+  },
+  {
+   "site": "ALB-09",
+   "nom": "Test",
+   "lat": 45.244464,
+   "lon": 4.844239,
+   "flux": "textile",
    "nbUnites": 1
   }
  ],
