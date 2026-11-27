@@ -147,6 +147,8 @@ section{margin-top:40px}
 .fr-rp i{display:block;height:100%;border-radius:3px}
 .fr-pc{font-family:var(--mono);font-size:.6rem;color:var(--ink-2);margin-top:-3px}
 .fd-rp{display:flex;align-items:center;gap:8px;margin:-2px 0 10px;font-size:.8rem;color:var(--ink-2)}
+/* La poubelle du passage reste petite : sans ça, la règle des images du détail l'étirait sur toute la largeur. */
+.fd-rp svg{width:30px!important;height:30px!important;max-width:30px;flex:none}
 .fr-cell:hover .fr-sq,.fr-cell:focus-visible .fr-sq{outline:2px solid var(--ink-2);outline-offset:2px}
 .fr-sum{font-size:.74rem;color:var(--ink-3);margin-top:7px}
 button.fr-cell{appearance:none;background:none;border:0;padding:0;font:inherit;cursor:pointer}
