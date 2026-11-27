@@ -1123,7 +1123,7 @@ function dessinerBandeau() {
   const n = flux.length + 1;
   $("plein-b").innerHTML = `<span class="pl-t">Touche ce qui est plein</span>`
     + `<div class="pl-g">${tuiles}</div>`
-    + `<div class="pl-bas"><button type="button" class="pl-ret" data-pe="retour">Retour</button><button type="button" class="pl-ok">OK</button></div><i class="pl-j"><b></b></i>`;
+    + `<div class="pl-bas"><button type="button" class="pl-ret" data-pe="retour">Retour</button><button type="button" class="pl-ok">OK</button></div>`;
 }
 /* Fixé en bas de l'écran : la page remonte en haut après chaque photo, un
 bandeau dans le flux restait hors de vue. Sans appui, il s'efface après 8 s ; un premier appui laisse
@@ -1159,7 +1159,8 @@ document.addEventListener("click", async e => {
     }
     if (pe.dataset.pe === "pb") {
       if (pleinsDe(u).includes("_propre")) await basculerPlein(u, "_propre");
-      PB_E = "pb"; dessinerBandeau(); relancerBandeau(12000); rendre(); return;
+      /* Écran des problèmes : pas de fermeture automatique, on coche ce qu'on veut puis OK. */
+      PB_E = "pb"; dessinerBandeau(); clearTimeout(PB_T); rendre(); return;
     }
     if (pe.dataset.pe === "retour") { PB_E = "choix"; dessinerBandeau(); relancerBandeau(8000); return; }
   }
@@ -1167,10 +1168,8 @@ document.addEventListener("click", async e => {
   if (c && PB_U) {
     const u = PB_U; await basculerPlein(u, c.dataset.pf);
     if (PB_U === u) {
-      /* Plein ET sale cochés : tout est dit, on ferme. Sinon 4 s pour l'autre
-         signal, ou OK pour fermer tout de suite. */
-      const l = pleinsDe(u), deux = l.includes("_propre") || (l.includes("_sale") && l.some(x => x[0] !== "_"));
-      dessinerBandeau(); relancerBandeau(deux ? 900 : 6000);
+      /* On peut cocher plusieurs flux : la fenêtre reste ouverte jusqu'à OK. */
+      dessinerBandeau(); clearTimeout(PB_T);
     }
     rendre(); return;
   }
