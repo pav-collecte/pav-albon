@@ -2012,11 +2012,11 @@ if (it.propre) fd.append("propre", it.propre); // îlot signalé propre par l'ag
          et la photo reste en file — elle partira une fois le code corrigé. */
       if (r.status === 401 || r.status === 403) {
         dernierEtat = "Code d'accès refusé — vérifie-le auprès de la mairie";
-        armer(false);
+        armer(false); sonEchec();
         ouvrirCode("Ce code a été refusé par le serveur.");
         break;
       }
-      if (!r.ok) { dernierEtat = `Le serveur a répondu ${r.status} — nouvelle tentative plus tard`; break; }
+      if (!r.ok) { dernierEtat = `Le serveur a répondu ${r.status} — nouvelle tentative plus tard`; sonEchec(); break; }
       await qDel(it.uuid);
       await noterEnvoyee(it);
       /* La photo est partie : sa vignette quitte l'îlot, mais le passage
@@ -2029,7 +2029,7 @@ if (it.propre) fd.append("propre", it.propre); // îlot signalé propre par l'ag
     if (!dernierEtat && envoyees) dernierEtat = `${envoyees} photo${envoyees > 1 ? "s" : ""} envoyée${envoyees > 1 ? "s" : ""}`;
     if (!(await qAll()).length) { armer(false); if (envoyees) sonValidation(); }   // file vide : il faudra réarmer
   } catch (e) {
-    dernierEtat = "Réseau indisponible — nouvelle tentative plus tard";
+    dernierEtat = "Réseau indisponible — nouvelle tentative plus tard"; sonEchec();
   } finally {
     envoiEnCours = false; envoiTotal = 0; envoiFaites = 0;
     await rechargerVignettes();
@@ -2043,6 +2043,26 @@ if (it.propre) fd.append("propre", it.propre); // îlot signalé propre par l'ag
 let AUDIO = null;
 function debloquerSon() {
   try { AUDIO = AUDIO || new (window.AudioContext || window.webkitAudioContext)(); if (AUDIO.state === "suspended") AUDIO.resume(); } catch {}
+}
+/* Son d'échec : deux notes descendantes, plus graves, et une vibration plus longue.
+   Une seule fois par appui sur « Envoyer » : les nouvelles tentatives automatiques
+   (toutes les 30 s, hors ligne) ne sonnent pas à chaque fois. */
+let sonEchecJoue = true;
+function sonEchec() {
+  if (sonEchecJoue) return; sonEchecJoue = true;
+  try { if (navigator.vibrate) navigator.vibrate([120, 80, 120]); } catch {}
+  try {
+    if (!AUDIO || document.visibilityState !== "visible") return;
+    const t = AUDIO.currentTime + 0.02;
+    [[392, 0], [262, 0.18]].forEach(([f, d]) => {
+      const o = AUDIO.createOscillator(), g = AUDIO.createGain();
+      o.type = "triangle"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t + d);
+      g.gain.exponentialRampToValueAtTime(0.35, t + d + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.32);
+      o.connect(g); g.connect(AUDIO.destination); o.start(t + d); o.stop(t + d + 0.36);
+    });
+  } catch {}
 }
 function sonValidation() {
   try { if (navigator.vibrate) navigator.vibrate(40); } catch {}
@@ -2063,7 +2083,7 @@ function sonValidation() {
 // L'appui arme l'envoi : à partir de là, la file se vide seule si le réseau
 // revient. Tant qu'il n'a pas eu lieu, rien ne quitte le téléphone.
 $("q-send").addEventListener("click", async () => {
-  debloquerSon();
+  debloquerSon(); sonEchecJoue = false;
   if (!envoiEnCours) await nouveauLot();
   dernierEtat = ""; armer(true); vider(); demanderSync();
 });
