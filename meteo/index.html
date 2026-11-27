@@ -215,6 +215,8 @@ figure.preuve a{cursor:zoom-in}
 .fd-f li{font-size:.82rem;line-height:1.45}
 .fd-f b{font-weight:600}
 .fd-tx{display:block;color:var(--ink-3);font-size:.78rem;margin-top:2px}
+/* Sous une photo du passage : 3 lignes au plus ; le texte entier est dans la visionneuse. */
+.fd-ph .fd-tx{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-family:var(--sans,inherit)}
 /* Mise en route du projet : une jauge globale et une barre par prérequis. */
 .init{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
 .in-g{display:flex;align-items:baseline;gap:10px}
@@ -766,6 +768,12 @@ f.addEventListener('touchend',e=>{ if(x0===null) return; const dx=e.changedTouch
 document.addEventListener('keydown',kb); document.body.appendChild(f); montrer();
 }
 document.addEventListener('click',e=>{ const a=e.target.closest('.pj-strip [data-zoom]'); if(!a) return; e.preventDefault(); zoom(a.dataset.zoom,parSite[a.dataset.site]); });
+/* Photos d'un passage de la frise : même visionneuse, construite à partir des identifiants. */
+document.addEventListener('click',e=>{ const a=e.target.closest('[data-fd-zoom]'); if(!a) return; e.preventDefault();
+  const l=(a.dataset.fdIds||'').split(',').filter(Boolean).map(id=>{ const rows=obs.filter(o=>o.photo===id); if(!rows.length) return null;
+    const p={id,site:rows[0].site,ts:rows.reduce((m,o)=>o.ts<m?o.ts:m,rows[0].ts),flux:new Set(rows.map(o=>FLUX_LABEL[o.flux]||o.flux))};
+    const lt=lotDe[id]; p.L=lt&&lt.L; const np=notePhotoAvec(REF,obs,id); p.Lph=np&&np.L; p.ptsPh=np?np.pts:null; p.ag=agentPhoto(id,obs); return p; }).filter(Boolean);
+  if(l.length) zoom(a.dataset.fdZoom,l); });
 })(); }catch(e){ console.warn('Photos du jour', e); } // jamais au détriment du reste de la page
 
 // Îlots
@@ -877,8 +885,13 @@ document.getElementById('sites').innerHTML = sites.map(s=>{
         return '<figure><div class="fd-np">Photo non publiée : une personne ou une plaque y est reconnaissable.</div><figcaption>'+leg+'</figcaption></figure>';
       const np=notePhotoAvec(REF,obs,id), ag=agentPhoto(id,obs);
       const note=np?'<span class="fd-pn" style="background:var('+np.L.var+')" title="'+esc('Cette photo : '+np.L.l+' — '+np.L.lab+', '+np.pts+' point'+(np.pts>1?'s':''))+'">'+np.L.l+(ag?' '+bonhomme(ag):'')+' · '+np.pts+' pt'+(np.pts>1?'s':'')+'</span>':'';
-      return '<figure><a href="'+urlPhoto(id)+'" target="_blank" rel="noopener">'+note+'<img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg
-        +(ag?'<span class="fd-ag">'+bonhomme(ag)+' '+esc(ag.txt)+'</span>':'')+'</figcaption></figure>';
+      /* Commentaire de CETTE photo (texte du constat), et non seulement celui du dernier constat par flux. */
+      const tx=[...new Set(rows.map(o=>o.texte).filter(Boolean))];
+      /* Appui : visionneuse dans la page, comme les vignettes des îlots — jamais de lien Google
+         (une photo Drive non partagée demandait un compte Google). */
+      return '<figure><a href="#" data-fd-zoom="'+esc(id)+'" data-fd-ids="'+esc(ids.filter(x=>!l.obs.some(o=>o.photo===x&&(o.personneVisible||o.plaqueLisible))).join(','))+'">'+note+'<img src="'+urlVignette(id,600)+'" loading="lazy" alt="'+esc('Photo de '+h)+'"></a><figcaption>'+leg
+        +(ag?'<span class="fd-ag">'+bonhomme(ag)+' '+esc(ag.txt)+'</span>':'')
+        +(tx.length?'<span class="fd-tx">'+esc(tx.join(' '))+'</span>':'')+'</figcaption></figure>';
     }).join('');
     const parFlux={};
     l.obs.forEach(o=>{ const p=parFlux[o.flux]; if(!p||new Date(o.ts)>new Date(p.ts)) parFlux[o.flux]=o; });
