@@ -266,18 +266,21 @@ et « Envoyer » juste dessous, sous le même pouce. */
 .annul small { font-size: .76rem; color: var(--muted); font-family: var(--font-mono); }
 .annul:disabled { opacity: .5; cursor: default; }
 .annul:active:not(:disabled) { background: var(--bg); }
-/* Proposition d'installation sur l'écran d'accueil (apparaît toute seule). */
-.inst { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60;
-  background: var(--card, #fff); color: var(--ink); border: 2px solid var(--ok); border-radius: 16px; padding: 14px 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.28); font: 500 15px/1.4 var(--font-ui); display: flex; gap: 12px; align-items: flex-start; }
+/* Proposition d'installation sur l'écran d'accueil (apparaît toute seule), au centre de l'écran. */
+.inst { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 60;
+  width: min(92vw, 420px); box-sizing: border-box;
+  background: var(--surface); color: var(--ink); border: 2px solid var(--ok); border-radius: 18px; padding: 20px 18px 18px;
+  box-shadow: 0 0 0 100vmax rgba(0,0,0,.55), 0 12px 34px rgba(0,0,0,.35);
+  font: 500 16px/1.45 var(--font-ui); display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
 .inst[hidden] { display: none; }
-.inst img { width: 48px; height: 48px; border-radius: 12px; flex: none; }
-.inst b { display: block; font-size: 1.05rem; margin-bottom: 2px; }
-.inst .inst-t { flex: 1; min-width: 0; }
-.inst .inst-a { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-.inst button { appearance: none; cursor: pointer; border-radius: 10px; padding: 9px 14px; font: 700 15px var(--font-ui); }
-.inst .inst-ok { background: var(--ok); color: #fff; border: 0; }
-.inst .inst-non { background: transparent; color: var(--ink); border: 1px solid var(--muted); }
+.inst img { width: 64px; height: 64px; border-radius: 14px; flex: none; }
+.inst b { display: block; font-size: 1.2rem; margin-bottom: 4px; color: var(--ink); }
+.inst .inst-t { width: 100%; }
+.inst #inst-txt { color: var(--ink); }
+.inst .inst-a { display: flex; gap: 10px; margin-top: 14px; justify-content: center; flex-wrap: wrap; }
+.inst button { appearance: none; cursor: pointer; border-radius: 12px; padding: 12px 18px; font: 700 16px var(--font-ui); min-width: 130px; }
+.inst .inst-ok { background: var(--ok); color: var(--surface); border: 0; }
+.inst .inst-non { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
 .flash {
   background: var(--surface); border: 1px solid var(--ok); border-left: 4px solid var(--ok);
   border-radius: 0 12px 12px 0; padding: 12px 14px;
