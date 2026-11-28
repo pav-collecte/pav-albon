@@ -564,7 +564,7 @@ const calcule=obs=>calculeAvec(REF,obs);
 /* Grande ville (plus de SEUIL_GV points) : les points sont rangés dans des secteurs, cases
    d'une grille posée sur la commune (environ 36 cases, les vides disparaissent). Chaque
    secteur porte le nom de sa rue la plus représentée. Les petites communes ne changent pas. */
-const SEUIL_GV=200;
+let SEUIL_GV=200;   // config.json : meteo.seuilGrandeVille (onglet Parametres de la commune)
 /* Couleur d'un secteur ou d'un groupe de points : la lettre la plus mauvaise atteinte par au
    moins un tiers des points notés (D ou E pour un tiers ou plus → D, etc.). Un seul point
    noir ne colore donc pas tout un quartier ; le pire reste affiché à part. */
@@ -1496,6 +1496,7 @@ Promise.all([
     const n=normaliser(d);
     REF=n.REF; OBS=n.OBS;
     if(cfg.alertes&&Number(cfg.alertes.joursSansReleve)>0) JOURS_ALERTE=Number(cfg.alertes.joursSansReleve);
+    if(cfg.meteo&&Number(cfg.meteo.seuilGrandeVille)>0) SEUIL_GV=Number(cfg.meteo.seuilGrandeVille);
     document.getElementById('m-commune').textContent=libelleCommune(n.commune,n.departement);
     /* La provenance des donnees est nommee par la commune elle-meme : la page
        ne doit pas pretendre savoir dans quel classeur elle puise. */
