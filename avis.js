@@ -65,6 +65,15 @@
   tab.setAttribute("aria-label", "Donner votre avis ou une idée");
   tab.title = "Glisser vers le haut ou le bas pour déplacer · vers la droite pour réduire";
   document.body.appendChild(tab);
+  /* Appli de tournée : l'onglet n'apparaît qu'une fois l'agent rodé, après un certain nombre de
+     photos envoyées (config.json : avis.apresEnvois, 10 par défaut ; 0 = tout de suite). */
+  var CACHE = false;
+  if (PAGE === "collecte" && !VIA_ENCART) {
+    var seuilAvis = 10;
+    try { var cfgA = JSON.parse(lire("pav-config") || "null"); var vA = cfgA && cfgA.avis && Number(cfgA.avis.apresEnvois); if (vA >= 0 && isFinite(vA)) seuilAvis = vA; } catch (e) {}
+    CACHE = (Number(lire("pav-envois-total")) || 0) < seuilAvis;
+    if (CACHE) tab.style.display = "none";
+  }
   /* L'onglet se déplace (glisser vers le haut / le bas) et se réduit (glisser vers la droite ;
      vers la gauche pour l'agrandir). Position et taille sont mémorisées sur l'appareil. */
   var CLE_POS = "pav-avis-pos", CLE_MINI = "pav-avis-mini";
@@ -97,7 +106,7 @@
 
   /* Bulle d'invitation : au plus une fois par jour, jamais après un envoi récent. */
   var CLE_BULLE = "pav-avis-bulle";
-  if (!VIA_ENCART && !dejaEnvoye && !(Number(lire(CLE_BULLE)) > Date.now() - 864e5)) {
+  if (!CACHE && !VIA_ENCART && !dejaEnvoye && !(Number(lire(CLE_BULLE)) > Date.now() - 864e5)) {
     setTimeout(function () {
       if (document.querySelector(".pav-avis-fond")) return;
       var b = document.createElement("div"); b.className = "pav-avis-bulle"; b.setAttribute("role", "status");
