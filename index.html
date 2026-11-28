@@ -2957,8 +2957,10 @@ try { dessiner(document.getElementById('qr'), adresse); } catch {}
 (function () {
   var b = document.getElementById("inst"); if (!b) return;
   var installee = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
-  if (installee) return;
   var CLE = "pav-install-plus-tard", invite = null, montre = false;
+  /* Déjà installée : ouverte depuis l'icône, ou installée un jour depuis ce navigateur. */
+  if (installee) { try { localStorage.setItem("pav-installee", "1"); } catch (e) {} return; }
+  try { if (localStorage.getItem("pav-installee") === "1") return; } catch (e) {}
   var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   var lire = function () { try { return Number(localStorage.getItem(CLE)) || 0; } catch (e) { return 0; } };
   function montrer() {
@@ -2979,7 +2981,7 @@ try { dessiner(document.getElementById('qr'), adresse); } catch {}
     document.getElementById("inst-ok").textContent = "Installer";
     if (montre) return; setTimeout(montrer, 2500);
   });
-  window.addEventListener("appinstalled", function () { b.hidden = true; invite = null; });
+  window.addEventListener("appinstalled", function () { b.hidden = true; invite = null; try { localStorage.setItem("pav-installee", "1"); } catch (e) {} });
   document.getElementById("inst-ok").addEventListener("click", function () {
     if (!invite) { b.hidden = true; try { localStorage.setItem(CLE, String(Date.now())); } catch (e) {} return; }
     invite.prompt();
@@ -2990,7 +2992,9 @@ try { dessiner(document.getElementById('qr'), adresse); } catch {}
   });
   document.getElementById("inst-non").addEventListener("click", function () { b.hidden = true; try { localStorage.setItem(CLE, String(Date.now())); } catch (e) {} });
   /* Sans fenêtre système (iPhone, Firefox…) : le mode d'emploi s'affiche après quelques secondes. */
-  setTimeout(function () { if (!invite) montrer(); }, ios ? 4000 : 9000);
+  /* Chrome, Edge, Samsung : sans fenêtre système, c'est que l'appli est déjà installée → rien. */
+  var gereInstall = "onbeforeinstallprompt" in window;
+  setTimeout(function () { if (!invite && (ios || !gereInstall)) montrer(); }, ios ? 4000 : 9000);
 })();
 </script>
 </body>
